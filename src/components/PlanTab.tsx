@@ -248,7 +248,7 @@ export default function PlanTab({ run }: Props) {
         className="surface-elevated p-6 shine-border"
       >
         <h3 className="text-cream-100 mb-1 text-lg font-bold">Proof</h3>
-        <p className="text-xs text-cream-300/50 mb-5">14-day backtest · baseline = same day last week</p>
+        <p className="text-xs text-cream-300/50 mb-5">Backtested on sample data · baseline = same day last week</p>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
           <div className="metric-card text-center">

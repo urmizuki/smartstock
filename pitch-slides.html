@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartStock — Pitch Deck</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --peach: #FFF5EE;
+      --white: #FFFFFF;
+      --navy: #10162F;
+      --navy-light: #374151;
+      --muted: #6B7280;
+      --border: #E5E7EB;
+      --gold: #F7C948;
+      --gold-dark: #E6B000;
+      --gold-light: #FFF4C2;
+      --sky: #E6F7FF;
+      --green: #16a34a;
+      --red: #dc2626;
+      --purple: #9333EA;
+      --purple-light: #F3E8FF;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+      background: var(--peach);
+      color: var(--navy);
+      overflow: hidden;
+    }
+
+    .slide-deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    @media (min-width: 769px) {
+      .slide-deck {
+        max-width: calc(100vh * 16 / 9);
+        max-height: calc(100vw * 9 / 16);
+        margin: auto;
+        position: absolute;
+        inset: 0;
+      }
+    }
+
+    .slide {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.45s ease, transform 0.45s ease;
+      background: var(--peach);
+      overflow: hidden;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .slide-content {
+      width: 100%;
+      max-width: 1100px;
+      max-height: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 28px;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--gold-light);
+      color: var(--navy);
+      border: 1px solid var(--gold);
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    h1 { font-size: clamp(38px, 5.5vw, 72px); font-weight: 800; line-height: 1.08; color: var(--navy); }
+    h2 { font-size: clamp(26px, 3.5vw, 44px); font-weight: 700; line-height: 1.18; color: var(--navy); }
+    h3 { font-size: clamp(18px, 2vw, 24px); font-weight: 700; color: var(--navy); }
+    p, li { font-size: clamp(16px, 1.6vw, 20px); line-height: 1.55; color: var(--navy-light); }
+    .small { font-size: clamp(13px, 1.2vw, 16px); color: var(--muted); }
+
+    .gradient-text {
+      background: linear-gradient(135deg, var(--gold-dark), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 10px 40px -10px rgba(16, 22, 47, 0.08);
+      text-align: left;
+    }
+
+    .card-accent { border-left: 5px solid var(--gold); }
+    .card-purple {
+      border-left: 5px solid var(--purple);
+      background: linear-gradient(135deg, var(--white) 0%, var(--purple-light) 100%);
+    }
+    .card-green { border-left: 5px solid var(--green); }
+    .card-red { border-left: 5px solid var(--red); }
+
+    .icon-circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin-bottom: 16px;
+      background: var(--gold-light);
+    }
+
+    .slide-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      width: 100%;
+      align-items: center;
+      text-align: left;
+    }
+
+    .slide-features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      width: 100%;
+    }
+
+    .slide-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      width: 100%;
+    }
+
+    .metric-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 20px;
+      text-align: center;
+      box-shadow: 0 8px 24px -8px rgba(16, 22, 47, 0.06);
+    }
+
+    .metric-value {
+      font-size: clamp(32px, 4vw, 48px);
+      font-weight: 800;
+      color: var(--navy);
+      line-height: 1;
+    }
+
+    .metric-label {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .value-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      width: 100%;
+    }
+
+    .value-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 22px;
+      text-align: center;
+      box-shadow: 0 6px 20px -6px rgba(16, 22, 47, 0.06);
+    }
+
+    .value-score {
+      font-size: clamp(36px, 4vw, 52px);
+      font-weight: 800;
+      color: var(--gold-dark);
+      line-height: 1;
+    }
+
+    .screenshot {
+      width: 100%;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 60px -20px rgba(16, 22, 47, 0.15);
+    }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .flow-step {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 22px;
+      min-width: 140px;
+      box-shadow: 0 6px 16px -6px rgba(16, 22, 47, 0.06);
+    }
+
+    .flow-arrow {
+      font-size: 24px;
+      color: var(--gold-dark);
+      font-weight: 800;
+    }
+
+    .cta-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--navy);
+      color: var(--gold);
+      padding: 16px 32px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 16px;
+      text-decoration: none;
+      box-shadow: 0 8px 24px -6px rgba(16, 22, 47, 0.25);
+      border: none;
+      cursor: pointer;
+    }
+
+    .cta-button:hover { background: #1c2540; }
+
+    ul.clean { list-style: none; text-align: left; }
+    ul.clean li {
+      position: relative;
+      padding-left: 28px;
+      margin-bottom: 12px;
+    }
+    ul.clean li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--green);
+      font-weight: 800;
+    }
+
+    .progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 4px;
+      background: var(--gold);
+      transition: width 0.3s;
+      z-index: 1000;
+    }
+
+    .nav-controls {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 24px -8px rgba(16, 22, 47, 0.1);
+    }
+
+    .nav-btn {
+      background: var(--navy);
+      border: none;
+      color: var(--gold);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-btn:hover { background: #1c2540; }
+    .slide-counter { color: var(--muted); font-size: 14px; font-weight: 600; }
+
+    @media (max-width: 768px) {
+      .slide { padding: 32px 20px; }
+      .slide-split { grid-template-columns: 1fr; gap: 24px; }
+      .slide-features { grid-template-columns: 1fr; }
+      .slide-metrics { grid-template-columns: repeat(2, 1fr); }
+      .value-grid { grid-template-columns: 1fr; }
+      .flow { flex-direction: column; }
+      .flow-arrow { transform: rotate(90deg); }
+      h1 { font-size: clamp(28px, 8vw, 40px); }
+      h2 { font-size: clamp(20px, 5vw, 28px); }
+    }
+
+    @media (max-width: 480px) {
+      .slide { padding: 24px 16px; }
+      .card { padding: 22px; }
+      .slide-metrics { grid-template-columns: 1fr; }
+      .nav-controls { bottom: 16px; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress-bar" id="progressBar"></div>
+
+  <div class="slide-deck">
+
+    <!-- Slide 1: Title -->
+    <div class="slide active">
+      <div class="slide-content">
+        <div class="badge">SmartStock</div>
+        <h1>One prompt. One plan.</h1>
+        <p style="font-size: 22px; max-width: 680px;">
+          Less food waste, more profit for campus canteens.
+        </p>
+        <p class="small" style="margin-top: 16px;">Built with WorkBuddy · Live demo next</p>
+      </div>
+    </div>
+
+    <!-- Slide 2: Problem -->
+    <div class="slide">
+      <div class="slide-content">
+        <h2 style="max-width: 800px;">Campus canteens throw away money every morning</h2>
+        <div class="slide-features" style="margin-top: 12px;">
+          <div class="card card-red">
+            <div class="icon-circle">😰</div>
+            <h3>Over-prepped stock</h3>
+            <p class="small">No demand signal means trays of unsold food by 11 a.m.</p>
+          </div>
+          <div class="card card-red">
+            <div class="icon-circle">📉</div>
+            <h3>Missed markdowns</h3>
+            <p class="small">Expiry items get tossed instead of discounted in time.</p>
+          </div>
+          <div class="card card-red">
+            <div class="icon-circle">⏰</div>
+            <h3>Decision fatigue</h3>
+            <p class="small">Owners guess at 5 a.m. instead of planning with data.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: Cost of Inaction -->
+    <div class="slide">
+      <div class="slide-content">
+        <h2>The cost of guessing</h2>
+        <div class="slide-metrics" style="margin-top: 16px;">
+          <div class="metric-card">
+            <div class="metric-value">15–25%</div>
+            <div class="metric-label">typical food waste in campus canteens</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">RM 200+</div>
+            <div class="metric-label">lost per small canteen per week</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">30 min</div>
+            <div class="metric-label">daily planning time owners can't spare</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">#1</div>
+            <div class="metric-label">pain point: "what should I cook tomorrow?"</div>
+          </div>
+        </div>
+        <p class="small" style="margin-top: 12px;">Source: operator interviews + backtest baseline vs. SmartStock plan</p>
+      </div>
+    </div>
+
+    <!-- Slide 4: Solution -->
+    <div class="slide">
+      <div class="slide-content">
+        <div class="badge">The Solution</div>
+        <h2>Meet SmartStock</h2>
+        <p style="max-width: 720px;">
+          An agentic inventory-loss predictor that turns one plain-language prompt into a ranked, validated morning plan.
+        </p>
+        <div class="flow" style="margin-top: 20px;">
+          <div class="flow-step">
+            <strong>1. Ask</strong><br><span class="small">"Plan for tomorrow"</span>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <strong>2. Agents run</strong><br><span class="small">Demand · Expiry · Validator</span>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <strong>3. Act</strong><br><span class="small">Ranked actions + proof</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 5: Agentic Workflow -->
+    <div class="slide">
+      <div class="slide-content">
+        <div class="badge">How it works</div>
+        <h2>A multi-agent pipeline, not a chat wrapper</h2>
+        <p style="max-width: 720px;">SmartStock decomposes your goal, forecasts demand, flags expiry, and validates constraints — automatically.</p>
+        <div class="flow" style="margin-top: 20px;">
+          <div class="flow-step"><strong>Planner</strong><br><span class="small">decomposes the goal</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><strong>Demand</strong><br><span class="small">forecasts sales</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><strong>Expiry</strong><br><span class="small">flags near-expiry stock</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><strong>Validator</strong><br><span class="small">checks constraints</span></div>
+        </div>
+        <p class="small" style="margin-top: 16px;">Agents react to context: payday, rain, holiday, and local events.</p>
+      </div>
+    </div>
+
+    <!-- Slide 6: WorkBuddy Integration -->
+    <div class="slide">
+      <div class="slide-content">
+        <div class="badge">Powered by WorkBuddy</div>
+        <h2>WorkBuddy is the execution engine</h2>
+        <p style="max-width: 760px;">The chat surface launches agents, renders plans, and feeds context back into the next run.</p>
+        <div class="slide-features" style="margin-top: 8px;">
+          <div class="card card-purple">
+            <div class="icon-circle" style="background: var(--purple-light);">⚡</div>
+            <h3>Trigger agents</h3>
+            <p class="small">User prompt inside WorkBuddy launches the full agent pipeline.</p>
+          </div>
+          <div class="card card-purple">
+            <div class="icon-circle" style="background: var(--purple-light);">🛠️</div>
+            <h3>Render actions</h3>
+            <p class="small">Plan, stock, and supplier outputs are displayed in WorkBuddy's UI.</p>
+          </div>
+          <div class="card card-purple">
+            <div class="icon-circle" style="background: var(--purple-light);">🔄</div>
+            <h3>Context controls</h3>
+            <p class="small">Payday/rain toggles in WorkBuddy feed back into agent reasoning.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 7: Validation & Trust -->
+    <div class="slide">
+      <div class="slide-content">
+        <div class="badge">Trust & Verification</div>
+        <h2>Every plan is validated and explainable</h2>
+        <div class="slide-split" style="margin-top: 8px;">
+          <div class="card card-accent" style="text-align: left;">
+            <h3 style="margin-bottom: 12px;">Built-in checks</h3>
+            <ul class="clean">
+              <li>Validator agent rejects impossible plans</li>
+              <li>Backtest compares baseline vs. SmartStock</li>
+              <li>Every action shows "Why this action?" with forecast chart</li>
+              <li>Confidence flags: Validated / Review</li>
+            </ul>
+          </div>
+          <div style="text-align: left;">
+            <p>Outputs are not vague suggestions. They are structured, numbered, and immediately usable: restock quantities, discount percentages, supplier message text.</p>
+            <p class="small" style="margin-top: 16px;">Backtested on sample data · baseline = same day last week · savings quantified in RM</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 8: Product Flow -->
+    <div class="slide">
+      <div class="slide-content">
+        <div class="badge">Product Flow</div>
+        <h2>Chat, Plan, Stock — in one flow</h2>
+        <div style="width: 100%; max-width: 900px; margin-top: 12px;">
+          <div class="screenshot" style="background: var(--white); padding: 24px; text-align: left;">
+            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 200px; background: var(--peach); border-radius: 16px; padding: 16px;">
+                <p style="font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px;">Chat</p>
+                <p class="small">"Plan for tomorrow"</p>
+                <p class="small" style="color: var(--muted); margin-top: 8px;">Planner → Demand → Expiry → Validator</p>
+              </div>
+              <div style="flex: 1; min-width: 200px; background: var(--sky); border-radius: 16px; padding: 16px;">
+                <p style="font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px;">Plan</p>
+                <p class="small">1. Restock karipap (+36)<br>2. Markdown tuna sandwich (-20%)<br>3. Skip teh tarik order</p>
+              </div>
+              <div style="flex: 1; min-width: 200px; background: #f0fdf4; border-radius: 16px; padding: 16px;">
+                <p style="font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px;">Proof</p>
+                <p class="small">Baseline loss: RM 87.40<br>SmartStock loss: RM 61.18<br><strong style="color: var(--green);">Savings: 30%</strong></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 9: Impact -->
+    <div class="slide">
+      <div class="slide-content">
+        <h2>Proven impact, not promises</h2>
+        <div style="width: 100%; max-width: 700px; height: 320px; margin-top: 8px;">
+          <canvas id="savingsChart"></canvas>
+        </div>
+        <p class="small" style="margin-top: 12px;">Backtested on sample sales data: baseline same-day-last-week vs. SmartStock plan</p>
+      </div>
+    </div>
+
+    <!-- Slide 10: Why SmartStock wins -->
+    <div class="slide">
+      <div class="slide-content">
+        <h2>Why SmartStock wins</h2>
+        <div class="value-grid" style="margin-top: 12px;">
+          <div class="value-card">
+            <div class="value-score">Real</div>
+            <p class="small" style="margin-top: 8px; font-weight: 600;">Solves a daily operational bottleneck</p>
+          </div>
+          <div class="value-card">
+            <div class="value-score">Agentic</div>
+            <p class="small" style="margin-top: 8px; font-weight: 600;">Multi-step planning + validation</p>
+          </div>
+          <div class="value-card">
+            <div class="value-score">Integrated</div>
+            <p class="small" style="margin-top: 8px; font-weight: 600;">WorkBuddy drives real actions</p>
+          </div>
+          <div class="value-card">
+            <div class="value-score">Reliable</div>
+            <p class="small" style="margin-top: 8px; font-weight: 600;">Self-checked, structured outputs</p>
+          </div>
+          <div class="value-card">
+            <div class="value-score">Live</div>
+            <p class="small" style="margin-top: 8px; font-weight: 600;">One prompt → plan in ~8 seconds</p>
+          </div>
+          <div class="value-card">
+            <div class="value-score">30%</div>
+            <p class="small" style="margin-top: 8px; font-weight: 600;">backtested loss reduction</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 11: Demo Transition -->
+    <div class="slide">
+      <div class="slide-content">
+        <h2 style="max-width: 800px;">Now let's see it in action.</h2>
+        <p style="max-width: 640px;">One prompt. One goal. End-to-end execution — live.</p>
+        <a href="#" class="cta-button" style="margin-top: 24px;" onclick="showSlide(1); return false;">Back to start →</a>
+        <p class="small" style="margin-top: 24px;">SmartStock · WorkBuddy Agentic Solutions</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="nav-controls">
+    <button class="nav-btn" onclick="prevSlide()">←</button>
+    <span class="slide-counter"><span id="current">1</span> / <span id="total">11</span></span>
+    <button class="nav-btn" onclick="nextSlide()">→</button>
+  </div>
+
+  <script>
+    let current = 1;
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    document.getElementById('total').textContent = total;
+
+    function showSlide(n) {
+      if (n < 1) n = 1;
+      if (n > total) n = total;
+      current = n;
+      slides.forEach((s, i) => {
+        s.classList.toggle('active', i === n - 1);
+      });
+      document.getElementById('current').textContent = n;
+      document.getElementById('progressBar').style.width = (n / total * 100) + '%';
+    }
+
+    function nextSlide() { showSlide(current + 1); }
+    function prevSlide() { showSlide(current - 1); }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); nextSlide(); }
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prevSlide(); }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.nav-controls') && !e.target.closest('.cta-button')) nextSlide();
+    });
+
+    new Chart(document.getElementById('savingsChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+        datasets: [
+          {
+            label: 'Baseline Loss (RM)',
+            data: [92, 88, 95, 87],
+            backgroundColor: 'rgba(220, 38, 38, 0.2)',
+            borderColor: 'var(--red)',
+            borderWidth: 2,
+            borderRadius: 8,
+          },
+          {
+            label: 'SmartStock Loss (RM)',
+            data: [64, 61, 68, 60],
+            backgroundColor: 'rgba(22, 163, 74, 0.2)',
+            borderColor: 'var(--green)',
+            borderWidth: 2,
+            borderRadius: 8,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#374151', font: { family: "Plus Jakarta Sans" } } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#6B7280', font: { family: "Plus Jakarta Sans" } } },
+          y: { grid: { color: '#E5E7EB' }, ticks: { color: '#6B7280', font: { family: "Plus Jakarta Sans" } } }
+        }
+      }
+    });
+
+    showSlide(1);
+  </script>
+</body>
+</html>

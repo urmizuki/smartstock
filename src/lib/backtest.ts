@@ -1,4 +1,4 @@
-// Backtest: last 14 days, every item
+// Backtest: last 7 days, every item
 // Baseline: order = sales on same day last week (naive)
 // SmartStock: newsvendor on prior 4 same weekdays
 // Loss per item per day = unmet demand × Cu + unsold units × Co
@@ -21,7 +21,7 @@ export function computeDailyLoss(
 export function backtest(
   sales: DailySales[],
   items: Item[],
-  days: number = 14
+  days: number = 7
 ): {
   baselineLoss: number;
   smartStockLoss: number;
