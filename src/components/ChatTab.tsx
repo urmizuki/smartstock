@@ -91,47 +91,47 @@ export default function ChatTab({ run, onRun, onSwitchToPlan, onSwitchToPro, run
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-240px)] min-h-[380px]">
-      {/* Welcome hero */}
+    <div className="flex flex-col h-[calc(100dvh-188px)] sm:h-[calc(100dvh-176px)] min-h-[320px]">
+      {/* Welcome hero — compact on mobile */}
       <motion.div
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.5, ease: [0.175, 0.885, 0.32, 1.275] }}
-        className="surface-elevated p-6 mb-4 shine-border relative overflow-hidden"
+        className="surface-elevated p-4 sm:p-6 mb-3 sm:mb-4 shine-border relative overflow-hidden"
       >
-        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-gold-200/30 to-transparent rounded-full blur-2xl" />
-        <div className="relative flex items-start justify-between">
-          <div>
-            <p className="text-cream-300/60 text-xs font-bold uppercase tracking-wider">SmartStock</p>
-            <h2 className="text-3xl font-extrabold mt-2 leading-tight">Tomorrow's plan,<br />one prompt away.</h2>
-            <p className="text-cream-300/80 text-sm mt-3 max-w-sm">
+        <div className="absolute top-0 right-0 w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-bl from-gold-200/30 to-transparent rounded-full blur-2xl" />
+        <div className="relative flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-cream-300/60 text-[10px] sm:text-xs font-bold uppercase tracking-wider">SmartStock</p>
+            <h2 className="text-xl sm:text-3xl font-extrabold mt-1 sm:mt-2 leading-tight">Tomorrow's plan,<br className="hidden sm:block" /> one prompt away.</h2>
+            <p className="text-cream-300/80 text-xs sm:text-sm mt-2 max-w-sm hidden sm:block">
               Restock, markdown, and supplier message — ranked by how much money each action saves.
             </p>
           </div>
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center border-2 border-white shadow-lift">
-            <LeafIcon className="w-7 h-7 text-white" />
+          <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center border-2 border-white shadow-lift shrink-0">
+            <LeafIcon className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
           </div>
         </div>
       </motion.div>
 
-      {/* Pro upsell card */}
+      {/* Pro upsell card — thin banner on mobile */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.5 }}
-        whileHover={{ y: -3, scale: 1.01 }}
-        className="surface-premium p-4 mb-4 cursor-pointer"
+        whileHover={{ y: -2, scale: 1.01 }}
+        className="surface-premium p-3 sm:p-4 mb-3 sm:mb-4 cursor-pointer"
         onClick={onSwitchToPro}
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-fuchsia-500 to-violet-500 flex items-center justify-center shrink-0">
-            <SparklesIcon className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-fuchsia-500 to-violet-500 flex items-center justify-center shrink-0">
+            <SparklesIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-bold text-cream-100">Try SmartStock Pro free for 14 days</p>
-            <p className="text-xs text-cream-300/70">Agents, expiry markdowns, and savings proof.</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs sm:text-sm font-bold text-cream-100 truncate">Try SmartStock Pro free for 14 days</p>
+            <p className="text-[10px] sm:text-xs text-cream-300/70 truncate">Agents, expiry markdowns, and savings proof.</p>
           </div>
-          <span className="text-xs font-bold text-fuchsia-600 bg-fuchsia-100 px-3 py-1.5 rounded-full">Upgrade</span>
+          <span className="text-[10px] sm:text-xs font-bold text-fuchsia-600 bg-fuchsia-100 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full shrink-0">Upgrade</span>
         </div>
       </motion.div>
 
@@ -214,7 +214,7 @@ export default function ChatTab({ run, onRun, onSwitchToPlan, onSwitchToPro, run
 
       {/* Suggestions */}
       {!run && (
-        <div className="flex flex-wrap gap-2 pb-3">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2 pb-2 sm:pb-3">
           {SUGGESTIONS.map((s, i) => (
             <motion.button
               key={s}
@@ -223,7 +223,7 @@ export default function ChatTab({ run, onRun, onSwitchToPlan, onSwitchToPro, run
               transition={{ delay: 0.15 + i * 0.05 }}
               whileHover={{ y: -2, scale: 1.03 }}
               onClick={() => send(s)}
-              className="text-xs bg-white/80 backdrop-blur border border-sage-400/40 rounded-full px-4 py-2 text-cream-200 hover:border-gold-500 hover:text-gold-600 transition-colors cursor-pointer shadow-soft"
+              className="text-[11px] sm:text-xs bg-white/80 backdrop-blur border border-sage-400/40 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-cream-200 hover:border-gold-500 hover:text-gold-600 transition-colors cursor-pointer shadow-soft"
             >
               {s}
             </motion.button>
@@ -236,7 +236,7 @@ export default function ChatTab({ run, onRun, onSwitchToPlan, onSwitchToPro, run
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="flex gap-2"
+        className="flex gap-2 pt-1"
       >
         <input
           type="text"
@@ -244,11 +244,11 @@ export default function ChatTab({ run, onRun, onSwitchToPlan, onSwitchToPro, run
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send(input)}
           placeholder="Ask about tomorrow's plan..."
-          className="input-field flex-1"
+          className="input-field flex-1 text-sm"
         />
         <button
           onClick={() => send(input)}
-          className="btn-primary px-5"
+          className="btn-primary px-4 sm:px-5 text-sm"
         >
           Send
         </button>
