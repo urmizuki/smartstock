@@ -2,13 +2,14 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AgentRun } from "../lib/types";
 import { handleChatIntent } from "../lib/agents";
-import { LeafIcon, PlanIcon, SparklesIcon } from "./icons";
+import { LeafIcon, PlanIcon, SparklesIcon, PinIcon, UploadIcon } from "./icons";
 
 interface Props {
   run: AgentRun | null;
   onRun: () => void;
   onSwitchToPlan: () => void;
   onSwitchToPro: () => void;
+  onShowUpload: () => void;
   running: boolean;
 }
 
@@ -25,7 +26,7 @@ const SUGGESTIONS = [
   "Savings vs baseline",
 ];
 
-export default function ChatTab({ run, onRun, onSwitchToPlan, onSwitchToPro, running }: Props) {
+export default function ChatTab({ run, onRun, onSwitchToPlan, onSwitchToPro, onShowUpload, running }: Props) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -111,6 +112,34 @@ export default function ChatTab({ run, onRun, onSwitchToPlan, onSwitchToPro, run
           <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center border-2 border-white shadow-lift shrink-0">
             <LeafIcon className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
           </div>
+        </div>
+      </motion.div>
+
+      {/* PIN / Upload banner */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.08, duration: 0.5 }}
+        className="surface-elevated p-3 sm:p-4 mb-3 sm:mb-4 border-l-4 border-sky-300"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-sky-100 flex items-center justify-center shrink-0">
+              <PinIcon className="w-4 h-4 sm:w-5 sm:h-5 text-cream-100" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm font-bold text-cream-100 truncate">Oreo · UPM</p>
+              <p className="text-[10px] sm:text-xs text-cream-300/70 truncate">PIN: DEMO-UPM-001 · Sample data loaded</p>
+            </div>
+          </div>
+          <button
+            onClick={onShowUpload}
+            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white border border-sage-400/40 text-[10px] sm:text-xs font-semibold text-cream-200 hover:border-gold-500 hover:text-gold-600 transition-colors cursor-pointer"
+          >
+            <UploadIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Upload data</span>
+            <span className="sm:hidden">Upload</span>
+          </button>
         </div>
       </motion.div>
 

@@ -256,6 +256,7 @@ export default function App() {
                   onRun={executeRun}
                   onSwitchToPlan={switchToPlan}
                   onSwitchToPro={() => setActiveTab("pro")}
+                  onShowUpload={() => setShowUpload(true)}
                   running={running}
                 />
               )}
