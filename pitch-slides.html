@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SmartStock — Pitch Deck</title>
+  <title>SmartStock — SME Café Pitch Deck</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -315,6 +315,27 @@
     .nav-btn:hover { background: #1c2540; }
     .slide-counter { color: var(--muted); font-size: 14px; font-weight: 600; }
 
+    .subscription-slide { overflow-y: auto; }
+    .subscription-slide .slide-content { max-height: none; flex-shrink: 0; gap: 20px; margin: auto 0; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; width: 100%; }
+    .pricing-card { padding: 24px; border-top: 4px solid var(--border); }
+    .pricing-card.featured { border-color: var(--gold); background: var(--gold-light); }
+    .plan-audience { font-size: 13px; color: var(--navy-light); margin-bottom: 8px; }
+    .plan-price { display: flex; align-items: baseline; gap: 6px; margin: 18px 0; }
+    .plan-price strong { font-size: clamp(32px, 3.8vw, 48px); line-height: 1; color: var(--navy); }
+    .plan-price span { font-size: 14px; color: var(--navy-light); }
+    .pricing-card ul { list-style: none; border-top: 1px solid var(--border); padding-top: 12px; }
+    .pricing-card li { font-size: 15px; line-height: 1.5; margin-top: 8px; }
+    .pricing-note { max-width: 880px; font-size: 13px; color: var(--muted); }
+    @media (max-width: 768px) {
+      .subscription-slide { justify-content: flex-start; padding-bottom: 110px !important; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .pricing-card { padding: 22px; }
+    }
+    @media (max-height: 620px) and (min-width: 769px) {
+      .subscription-slide { justify-content: flex-start; padding: 24px 40px 100px; }
+    }
+
     @media (max-width: 768px) {
       .slide { padding: 32px 20px; }
       .slide-split { grid-template-columns: 1fr; gap: 24px; }
@@ -343,10 +364,10 @@
     <!-- Slide 1: Title -->
     <div class="slide active">
       <div class="slide-content">
-        <div class="badge">SmartStock</div>
-        <h1>One prompt. One plan.</h1>
+        <div class="badge">SmartStock · For SME cafés</div>
+        <h1>Less waste.<br>More café margin.</h1>
         <p style="font-size: 22px; max-width: 680px;">
-          Less food waste, more profit for campus canteens.
+          One prompt. A clearer stock plan for independent cafés in Malaysia.
         </p>
         <p class="small" style="margin-top: 16px;">Built with WorkBuddy · Live demo next</p>
       </div>
@@ -355,22 +376,22 @@
     <!-- Slide 2: Problem -->
     <div class="slide">
       <div class="slide-content">
-        <h2 style="max-width: 800px;">Campus canteens throw away money every morning</h2>
+        <h2 style="max-width: 800px;">Busy cafés cannot afford to guess tomorrow's stock</h2>
         <div class="slide-features" style="margin-top: 12px;">
           <div class="card card-red">
             <div class="icon-circle">😰</div>
             <h3>Over-prepped stock</h3>
-            <p class="small">No demand signal means trays of unsold food by 11 a.m.</p>
+            <p class="small">Unsold sandwiches and snacks at closing turn prep costs into waste.</p>
           </div>
           <div class="card card-red">
             <div class="icon-circle">📉</div>
             <h3>Missed markdowns</h3>
-            <p class="small">Expiry items get tossed instead of discounted in time.</p>
+            <p class="small">Near-expiry items lose their chance to sell when discounts come too late.</p>
           </div>
           <div class="card card-red">
             <div class="icon-circle">⏰</div>
             <h3>Decision fatigue</h3>
-            <p class="small">Owners guess at 5 a.m. instead of planning with data.</p>
+            <p class="small">Owners juggle staffing, service, and supplier orders with little time to analyse sales.</p>
           </div>
         </div>
       </div>
@@ -379,26 +400,26 @@
     <!-- Slide 3: Cost of Inaction -->
     <div class="slide">
       <div class="slide-content">
-        <h2>The cost of guessing</h2>
+        <h2>Small stock mistakes squeeze café margins</h2>
         <div class="slide-metrics" style="margin-top: 16px;">
           <div class="metric-card">
-            <div class="metric-value">15–25%</div>
-            <div class="metric-label">typical food waste in campus canteens</div>
+            <div class="metric-value">Waste</div>
+            <div class="metric-label">Over-prepped food loses value at closing.</div>
           </div>
           <div class="metric-card">
-            <div class="metric-value">RM 200+</div>
-            <div class="metric-label">lost per small canteen per week</div>
+            <div class="metric-value">Sales</div>
+            <div class="metric-label">Sold-out favourites miss the next order.</div>
           </div>
           <div class="metric-card">
-            <div class="metric-value">30 min</div>
-            <div class="metric-label">daily planning time owners can't spare</div>
+            <div class="metric-value">Cash</div>
+            <div class="metric-label">Excess stock ties up the buying budget.</div>
           </div>
           <div class="metric-card">
-            <div class="metric-value">#1</div>
-            <div class="metric-label">pain point: "what should I cook tomorrow?"</div>
+            <div class="metric-value">Time</div>
+            <div class="metric-label">Manual planning takes owners away from service.</div>
           </div>
         </div>
-        <p class="small" style="margin-top: 12px;">Source: operator interviews + backtest baseline vs. SmartStock plan</p>
+        <p class="small" style="margin-top: 12px;">Starting audience: owner-managed SME cafés with daily prep, perishable stock, and lean teams.</p>
       </div>
     </div>
 
@@ -408,7 +429,7 @@
         <div class="badge">The Solution</div>
         <h2>Meet SmartStock</h2>
         <p style="max-width: 720px;">
-          An agentic inventory-loss predictor that turns one plain-language prompt into a ranked, validated morning plan.
+          A stock-planning assistant for SME cafés: use sales history to decide what to restock, what to discount, and what to leave as is.
         </p>
         <div class="flow" style="margin-top: 20px;">
           <div class="flow-step">
@@ -420,7 +441,7 @@
           </div>
           <div class="flow-arrow">→</div>
           <div class="flow-step">
-            <strong>3. Act</strong><br><span class="small">Ranked actions + proof</span>
+            <strong>3. Review &amp; act</strong><br><span class="small">Owner makes the final call</span>
           </div>
         </div>
       </div>
@@ -430,8 +451,8 @@
     <div class="slide">
       <div class="slide-content">
         <div class="badge">How it works</div>
-        <h2>A multi-agent pipeline, not a chat wrapper</h2>
-        <p style="max-width: 720px;">SmartStock decomposes your goal, forecasts demand, flags expiry, and validates constraints — automatically.</p>
+        <h2>From café sales to tomorrow's priorities</h2>
+        <p style="max-width: 720px;">A multi-agent workflow forecasts item demand, flags expiry risk, and checks supplier limits and budget before the owner reviews the plan.</p>
         <div class="flow" style="margin-top: 20px;">
           <div class="flow-step"><strong>Planner</strong><br><span class="small">decomposes the goal</span></div>
           <div class="flow-arrow">→</div>
@@ -441,31 +462,31 @@
           <div class="flow-arrow">→</div>
           <div class="flow-step"><strong>Validator</strong><br><span class="small">checks constraints</span></div>
         </div>
-        <p class="small" style="margin-top: 16px;">Agents react to context: payday, rain, holiday, and local events.</p>
+        <p class="small" style="margin-top: 16px;">Payday and rain toggles let café owners explore demand scenarios before ordering.</p>
       </div>
     </div>
 
     <!-- Slide 6: WorkBuddy Integration -->
     <div class="slide">
       <div class="slide-content">
-        <div class="badge">Powered by WorkBuddy</div>
-        <h2>WorkBuddy is the execution engine</h2>
-        <p style="max-width: 760px;">The chat surface launches agents, renders plans, and feeds context back into the next run.</p>
+        <div class="badge">Built with WorkBuddy</div>
+        <h2>Built for the café owner's daily routine</h2>
+        <p style="max-width: 760px;">WorkBuddy helped build the prototype. SmartStock's browser app turns sample sales and stock into a practical plan — without a separate analyst.</p>
         <div class="slide-features" style="margin-top: 8px;">
           <div class="card card-purple">
             <div class="icon-circle" style="background: var(--purple-light);">⚡</div>
-            <h3>Trigger agents</h3>
-            <p class="small">User prompt inside WorkBuddy launches the full agent pipeline.</p>
+            <h3>Ask once</h3>
+            <p class="small">Ask SmartStock to plan tomorrow's café stock and run the planning workflow.</p>
           </div>
           <div class="card card-purple">
             <div class="icon-circle" style="background: var(--purple-light);">🛠️</div>
-            <h3>Render actions</h3>
-            <p class="small">Plan, stock, and supplier outputs are displayed in WorkBuddy's UI.</p>
+            <h3>Review priorities</h3>
+            <p class="small">See restock quantities, discount signage, and supplier message drafts in one app.</p>
           </div>
           <div class="card card-purple">
             <div class="icon-circle" style="background: var(--purple-light);">🔄</div>
-            <h3>Context controls</h3>
-            <p class="small">Payday/rain toggles in WorkBuddy feed back into agent reasoning.</p>
+            <h3>Adjust for the day</h3>
+            <p class="small">Compare payday and rainy-day scenarios, then rerun the plan before buying.</p>
           </div>
         </div>
       </div>
@@ -487,7 +508,7 @@
             </ul>
           </div>
           <div style="text-align: left;">
-            <p>Outputs are not vague suggestions. They are structured, numbered, and immediately usable: restock quantities, discount percentages, supplier message text.</p>
+            <p>Give the café owner a clear next step: restock quantities, suggested discounts, and supplier message drafts. Orders and promotions remain under the owner's control.</p>
             <p class="small" style="margin-top: 16px;">Backtested on sample data · baseline = same day last week · savings quantified in RM</p>
           </div>
         </div>
@@ -498,7 +519,7 @@
     <div class="slide">
       <div class="slide-content">
         <div class="badge">Product Flow</div>
-        <h2>Chat, Plan, Stock — in one flow</h2>
+        <h2>A café stock check, in one flow</h2>
         <div style="width: 100%; max-width: 900px; margin-top: 12px;">
           <div class="screenshot" style="background: var(--white); padding: 24px; text-align: left;">
             <div style="display: flex; gap: 16px; flex-wrap: wrap;">
@@ -509,11 +530,11 @@
               </div>
               <div style="flex: 1; min-width: 200px; background: var(--sky); border-radius: 16px; padding: 16px;">
                 <p style="font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px;">Plan</p>
-                <p class="small">1. Restock karipap (+36)<br>2. Markdown tuna sandwich (-20%)<br>3. Skip teh tarik order</p>
+                <p class="small">1. Review Karipap restock<br>2. Discount Sandwich tuna<br>3. Check Teh tarik demand</p>
               </div>
               <div style="flex: 1; min-width: 200px; background: #f0fdf4; border-radius: 16px; padding: 16px;">
-                <p style="font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px;">Proof</p>
-                <p class="small">Baseline loss: RM 87.40<br>SmartStock loss: RM 61.18<br><strong style="color: var(--green);">Savings: 30%</strong></p>
+                <p style="font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px;">Illustrative comparison</p>
+                <p class="small">Baseline loss: RM 87.40<br>With plan: RM 61.18<br><strong style="color: var(--green);">Example reduction: 30%</strong></p>
               </div>
             </div>
           </div>
@@ -521,57 +542,99 @@
       </div>
     </div>
 
-    <!-- Slide 9: Impact -->
+    <!-- Slide 9: Illustrative impact, not field-verified results -->
     <div class="slide">
       <div class="slide-content">
-        <h2>Proven impact, not promises</h2>
+        <h2>Measure the difference in RM</h2>
         <div style="width: 100%; max-width: 700px; height: 320px; margin-top: 8px;">
           <canvas id="savingsChart"></canvas>
         </div>
-        <p class="small" style="margin-top: 12px;">Backtested on sample sales data: baseline same-day-last-week vs. SmartStock plan</p>
+        <p class="small" style="margin-top: 12px;">Illustrative weekly losses, not measured café results. Validate savings with real sales and waste records in a café pilot.</p>
       </div>
     </div>
 
     <!-- Slide 10: Why SmartStock wins -->
     <div class="slide">
       <div class="slide-content">
-        <h2>Why SmartStock wins</h2>
+        <h2>Why it fits an SME café</h2>
         <div class="value-grid" style="margin-top: 12px;">
           <div class="value-card">
-            <div class="value-score">Real</div>
-            <p class="small" style="margin-top: 8px; font-weight: 600;">Solves a daily operational bottleneck</p>
+            <div class="value-score">Café</div>
+            <p class="small" style="margin-top: 8px; font-weight: 600;">Daily prep and perishable stock first</p>
           </div>
           <div class="value-card">
-            <div class="value-score">Agentic</div>
-            <p class="small" style="margin-top: 8px; font-weight: 600;">Multi-step planning + validation</p>
+            <div class="value-score">Clear</div>
+            <p class="small" style="margin-top: 8px; font-weight: 600;">Ranked decisions, not another spreadsheet</p>
           </div>
           <div class="value-card">
-            <div class="value-score">Integrated</div>
-            <p class="small" style="margin-top: 8px; font-weight: 600;">WorkBuddy drives real actions</p>
+            <div class="value-score">Lean</div>
+            <p class="small" style="margin-top: 8px; font-weight: 600;">Designed for owners with small teams</p>
           </div>
           <div class="value-card">
-            <div class="value-score">Reliable</div>
-            <p class="small" style="margin-top: 8px; font-weight: 600;">Self-checked, structured outputs</p>
+            <div class="value-score">Checked</div>
+            <p class="small" style="margin-top: 8px; font-weight: 600;">Supplier and budget constraints reviewed</p>
           </div>
           <div class="value-card">
-            <div class="value-score">Live</div>
-            <p class="small" style="margin-top: 8px; font-weight: 600;">One prompt → plan in ~8 seconds</p>
+            <div class="value-score">Control</div>
+            <p class="small" style="margin-top: 8px; font-weight: 600;">Owners decide what to order or discount</p>
           </div>
           <div class="value-card">
-            <div class="value-score">30%</div>
-            <p class="small" style="margin-top: 8px; font-weight: 600;">backtested loss reduction</p>
+            <div class="value-score">RM</div>
+            <p class="small" style="margin-top: 8px; font-weight: 600;">Compare estimated losses in ringgit</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Slide 11: Demo Transition -->
+    <!-- Slide 11: Subscription model -->
+    <div class="slide subscription-slide" aria-labelledby="subscription-title">
+      <div class="slide-content">
+        <div class="badge">Subscription model</div>
+        <h2 id="subscription-title">Start free. Grow with your café.</h2>
+        <p class="small">Monthly subscriptions for daily planning, from an independent café to a growing café group.</p>
+        <div class="pricing-grid">
+          <section class="card pricing-card" aria-labelledby="plan-free">
+            <p class="plan-audience">For cafés getting started</p>
+            <h3 id="plan-free">Free</h3>
+            <p class="plan-price"><strong>RM0</strong><span>/ forever</span></p>
+            <ul>
+              <li>3-day sales history</li>
+              <li>Daily demand forecast</li>
+              <li>Basic restock alerts</li>
+            </ul>
+          </section>
+          <section class="card pricing-card featured" aria-labelledby="plan-pro">
+            <p class="plan-audience">For everyday café operations</p>
+            <h3 id="plan-pro">Pro</h3>
+            <p class="plan-price"><strong>RM49</strong><span>/ month</span></p>
+            <ul>
+              <li>8-week history &amp; validated agent plans</li>
+              <li>Expiry markdowns &amp; supplier drafts</li>
+              <li>Loss comparisons &amp; context tuning</li>
+            </ul>
+          </section>
+          <section class="card pricing-card" aria-labelledby="plan-business">
+            <p class="plan-audience">For multi-outlet café teams</p>
+            <h3 id="plan-business">Business</h3>
+            <p class="plan-price"><strong>RM129</strong><span>/ month</span></p>
+            <ul>
+              <li>Everything in Pro</li>
+              <li>Multi-outlet &amp; multi-user management</li>
+              <li>Supplier integrations &amp; alerts</li>
+            </ul>
+          </section>
+        </div>
+        <p class="pricing-note">Proposed pricing aligned with the demo. Paid subscriptions are not live; multi-outlet, account, integration, and alert features are planned.</p>
+      </div>
+    </div>
+
+    <!-- Slide 12: Demo Transition -->
     <div class="slide">
       <div class="slide-content">
-        <h2 style="max-width: 800px;">Now let's see it in action.</h2>
-        <p style="max-width: 640px;">One prompt. One goal. End-to-end execution — live.</p>
+        <h2 style="max-width: 800px;">Let's plan tomorrow's café stock.</h2>
+        <p style="max-width: 640px;">See the sample-data demo. Next step: pilot with SME cafés and measure waste, stockouts, and planning time.</p>
         <a href="#" class="cta-button" style="margin-top: 24px;" onclick="showSlide(1); return false;">Back to start →</a>
-        <p class="small" style="margin-top: 24px;">SmartStock · WorkBuddy Agentic Solutions</p>
+        <p class="small" style="margin-top: 24px;">SmartStock · Stock planning for SME cafés · Built with WorkBuddy</p>
       </div>
     </div>
 
@@ -579,7 +642,7 @@
 
   <div class="nav-controls">
     <button class="nav-btn" onclick="prevSlide()">←</button>
-    <span class="slide-counter"><span id="current">1</span> / <span id="total">11</span></span>
+    <span class="slide-counter"><span id="current">1</span> / <span id="total">12</span></span>
     <button class="nav-btn" onclick="nextSlide()">→</button>
   </div>
 
