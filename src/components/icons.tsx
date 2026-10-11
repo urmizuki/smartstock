@@ -169,3 +169,24 @@ export function LockIcon({ className = base, ...props }: IconProps) {
     </svg>
   );
 }
+
+export function UploadIcon({ className = base, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" y1="3" x2="12" y2="15" />
+    </svg>
+  );
+}
+
+export function PinIcon({ className = base, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+      <path d="M12 21v-7" />
+      <path d="M5 10h14" />
+      <path d="M16 10V6a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v4" />
+      <circle cx="12" cy="10" r="2" />
+    </svg>
+  );
+}

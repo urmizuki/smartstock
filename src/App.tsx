@@ -18,6 +18,8 @@ import {
   InventoryIcon,
   PlanIcon,
   SparklesIcon,
+  UploadIcon,
+  PinIcon,
 } from "./components/icons";
 
 type TabId = "chat" | "plan" | "inventory" | "pro";
@@ -48,6 +50,7 @@ export default function App() {
     holiday: null,
   });
   const [running, setRunning] = useState(false);
+  const [showUpload, setShowUpload] = useState(false);
 
   const executeRun = useCallback(() => {
     setRunning(true);
@@ -113,6 +116,33 @@ export default function App() {
           })}
         </nav>
 
+        {/* Store PIN + Upload card */}
+        <div className="p-4">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="surface-elevated p-4 relative overflow-hidden"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-xl bg-sky-100 flex items-center justify-center">
+                <PinIcon className="w-5 h-5 text-cream-100" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-cream-100">Oreo · UPM</p>
+                <p className="text-[10px] text-cream-300/70">Store PIN: DEMO-UPM-001</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowUpload(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white border border-sage-400/40 text-xs font-semibold text-cream-200 hover:border-gold-500 hover:text-gold-600 transition-colors cursor-pointer"
+            >
+              <UploadIcon className="w-4 h-4" />
+              Upload sales data
+            </button>
+          </motion.div>
+        </div>
+
         {/* Pro upsell mini-card */}
         <div className="p-4">
           <motion.div
@@ -154,13 +184,22 @@ export default function App() {
                   <p className="text-xs text-cream-300/70 leading-none mt-1">Oreo · UPM</p>
                 </div>
               </div>
-              <button
-                onClick={executeRun}
-                disabled={running}
-                className="btn-primary text-sm px-5 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {running ? "Running..." : "Run agents"}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowUpload(true)}
+                  className="w-10 h-10 rounded-xl bg-white border border-sage-400/40 flex items-center justify-center text-cream-300/70 hover:text-gold-600 hover:border-gold-500 transition-colors cursor-pointer"
+                  aria-label="Upload data"
+                >
+                  <UploadIcon className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={executeRun}
+                  disabled={running}
+                  className="btn-primary text-sm px-5 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {running ? "Running..." : "Run agents"}
+                </button>
+              </div>
             </div>
           </div>
         </header>
@@ -227,6 +266,64 @@ export default function App() {
           </AnimatePresence>
         </main>
       </div>
+
+      {/* Upload data modal */}
+      <AnimatePresence>
+        {showUpload && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cream-100/40 backdrop-blur-sm"
+            onClick={() => setShowUpload(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              transition={{ duration: 0.2 }}
+              className="surface-elevated w-full max-w-md p-6 relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setShowUpload(false)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full hover:bg-forest-700/50 flex items-center justify-center text-cream-300/70 hover:text-cream-100 transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center shadow-lift">
+                  <UploadIcon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-cream-100">Upload store data</h3>
+                  <p className="text-xs text-cream-300/70">PIN: DEMO-UPM-001</p>
+                </div>
+              </div>
+              <p className="text-sm text-cream-200 mb-4">
+                In production, each canteen connects their store PIN and uploads a daily CSV of sales and stock. For this demo, synthetic sample data is loaded automatically.
+              </p>
+              <div className="space-y-3 mb-5">
+                <div className="flex items-start gap-3 text-sm text-cream-200">
+                  <span className="w-6 h-6 rounded-full bg-gold-100 text-gold-600 flex items-center justify-center text-xs font-bold shrink-0">1</span>
+                  <span>Export sales + stock from your POS as CSV.</span>
+                </div>
+                <div className="flex items-start gap-3 text-sm text-cream-200">
+                  <span className="w-6 h-6 rounded-full bg-gold-100 text-gold-600 flex items-center justify-center text-xs font-bold shrink-0">2</span>
+                  <span>Upload to your SmartStock PIN portal.</span>
+                </div>
+                <div className="flex items-start gap-3 text-sm text-cream-200">
+                  <span className="w-6 h-6 rounded-full bg-gold-100 text-gold-600 flex items-center justify-center text-xs font-bold shrink-0">3</span>
+                  <span>Agents retrain on your real history every night.</span>
+                </div>
+              </div>
+              <div className="p-3 rounded-xl bg-forest-700/50 border border-dashed border-sage-400/40 text-center">
+                <p className="text-xs text-cream-300/70">Demo mode — upload is disabled. Try "Run agents" on the sample data.</p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Mobile floating bottom nav */}
       <nav className="bottom-bar z-30 lg:hidden">
