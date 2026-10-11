@@ -190,3 +190,19 @@ export function PinIcon({ className = base, ...props }: IconProps) {
     </svg>
   );
 }
+
+export function ChevronUpIcon({ className = base, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+      <polyline points="18 15 12 9 6 15" />
+    </svg>
+  );
+}
+
+export function ChevronDownIcon({ className = base, ...props }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
