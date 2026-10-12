@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { AgentRun } from "../lib/types";
 import { handleChatIntent } from "../lib/agents";
-import { SAMPLE_ITEMS } from "../lib/sample-data";
 
 interface Props {
   run: AgentRun | null;
@@ -11,30 +10,12 @@ interface Props {
 }
 
 interface Message {
-  role: "user" | "assistant" | "trace";
+  role: "user" | "assistant" | "trace" | "summary";
   text: string;
   agent?: string;
 }
 
 const SUGGESTIONS = ["Prepare the plan", "What is at risk?", "Show discounts", "Savings vs baseline"];
-
-const ICONS: Record<string, string> = {
-  "nasi-lemak": "ph-bowl-food",
-  "teh-tarik": "ph-coffee",
-  "mee-goreng": "ph-bowl-food",
-  karipap: "ph-cookie",
-  "sandwich-tuna": "ph-bread",
-  "kuih-lapis": "ph-cake",
-};
-
-const CODES: Record<string, string> = {
-  "nasi-lemak": "MEL-01",
-  "teh-tarik": "DRK-02",
-  "mee-goreng": "MEL-03",
-  karipap: "SNK-04",
-  "sandwich-tuna": "MEL-05",
-  "kuih-lapis": "SNK-06",
-};
 
 export default function ChatTab({ run, running, onRun, onSwitchToPlan }: Props) {
   const [messages, setMessages] = useState<Message[]>([
@@ -42,18 +23,21 @@ export default function ChatTab({ run, running, onRun, onSwitchToPlan }: Props) 
   ]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
-  const endRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
+  // The stream is append-only, so the newest turn is always at the bottom.
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [messages]);
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages, streaming, running]);
 
   useEffect(() => {
     if (!run) return;
     let cancelled = false;
     const streamTrace = async () => {
       setStreaming(true);
-      setMessages((prev) => prev.filter((m) => m.role !== "trace"));
+      setMessages((prev) => prev.filter((m) => m.role !== "trace" && m.role !== "summary"));
       for (const step of run.trace) {
         if (cancelled) return;
         setMessages((prev) => [...prev, { role: "trace", agent: step.agent, text: step.message }]);
@@ -65,6 +49,7 @@ export default function ChatTab({ run, running, onRun, onSwitchToPlan }: Props) 
       setMessages((prev) => [
         ...prev,
         { role: "assistant", text: `Plan siap. ${acts} things need your attention — RM ${total.toFixed(2)} total impact.` },
+        { role: "summary", text: "" },
       ]);
       setStreaming(false);
     };
@@ -90,10 +75,11 @@ export default function ChatTab({ run, running, onRun, onSwitchToPlan }: Props) 
   const soldOut = run ? run.actions.filter((a) => a.category === "stockout").length : 3;
   const markdowns = run ? run.actions.filter((a) => a.category === "expiry").length : 1;
   const impact = run ? run.actions.reduce((s, a) => s + a.rmImpact, 0) : 152.16;
+  const needsAction = run ? run.actions.filter((a) => a.category !== "ok") : [];
 
   return (
     <>
-      <div className="scroll-area flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5">
+      <div ref={scrollRef} className="scroll-area flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5">
         {/* Chalk special */}
         <div className="special rise" style={{ ["--d" as string]: "0ms" }}>
           <div className="font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] text-gold-500">
@@ -120,30 +106,86 @@ export default function ChatTab({ run, running, onRun, onSwitchToPlan }: Props) 
           </div>
         </div>
 
-        {/* Messages */}
-        {messages.map((m, i) =>
-          m.role === "trace" ? (
-            <div
-              key={i}
-              className="rise flex max-w-[70ch] items-start gap-3 border-[2px] border-cream-100 bg-forest-800 px-4 py-2.5 font-mono text-[11px]"
-            >
-              <span className="flex-none font-bold uppercase tracking-[0.06em] text-brown-500">{m.agent}</span>
-              <span className="text-cream-300">{m.text}</span>
-            </div>
-          ) : (
-            <div
-              key={i}
-              className={`msg rise ${m.role === "user" ? "user" : ""}`}
-              style={{ ["--d" as string]: `${Math.min(i, 6) * 40}ms` }}
-            >
+        {/* Conversation */}
+        {messages.map((m, i) => {
+          if (m.role === "trace") {
+            return (
+              <div
+                key={i}
+                className="rise flex max-w-[70ch] items-start gap-3 border-[2px] border-cream-100 bg-forest-800 px-4 py-2.5 font-mono text-[11px]"
+              >
+                <span className="flex-none font-bold uppercase tracking-[0.06em] text-brown-500">{m.agent}</span>
+                <span className="text-cream-300">{m.text}</span>
+              </div>
+            );
+          }
+          if (m.role === "summary") {
+            if (!run) return null;
+            return (
+              <div key={i} className="panel rise max-w-[76ch]" style={{ ["--d" as string]: "0ms" }}>
+                <div className="panel-head">
+                  <i className="ph ph-clipboard-text" /> Plan summary
+                  <span className="flex-1" />
+                  <span className="n">READY</span>
+                </div>
+                <div className="metrics-grid !grid-cols-2 !border-0 !shadow-none min-[720px]:!grid-cols-4">
+                  <div className="m">
+                    <div className="k">Actions</div>
+                    <div className="v">{run.actions.filter((a) => a.category !== "ok").length}</div>
+                  </div>
+                  <div className="m">
+                    <div className="k">RM impact</div>
+                    <div className="v text-risk-500">{impact.toFixed(2)}</div>
+                  </div>
+                  <div className="m">
+                    <div className="k">Order units</div>
+                    <div className="v">{run.actions.reduce((s, a) => s + a.orderQty, 0)}</div>
+                  </div>
+                  <div className="m">
+                    <div className="k">Savings</div>
+                    <div className="v text-stock-500">{run.savingsPercent}%</div>
+                  </div>
+                </div>
+
+                {/* At-risk lines live inside the summary → the stream stays append-only */}
+                {needsAction.map((a) => (
+                  <div
+                    key={a.itemId}
+                    className="flex items-center justify-between gap-3 border-t-[2px] border-cream-100 px-4 py-3"
+                  >
+                    <div className="min-w-0">
+                      <div className="truncate text-[13px] font-extrabold uppercase tracking-[-0.01em]">
+                        {a.itemName}
+                      </div>
+                      <div className="truncate font-mono text-[10px] uppercase tracking-[0.05em] text-cream-300">
+                        {a.action}
+                      </div>
+                    </div>
+                    <span className={`price ${a.category === "expiry" ? "ok" : "risk"}`}>
+                      RM {a.rmImpact.toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+
+                <div className="flex flex-wrap items-center gap-3 border-t-[2px] border-cream-100 p-4">
+                  <span className="tick min-w-[150px] flex-1">Backtest vs same-day-last-week baseline</span>
+                  <button className="btn-primary" onClick={onSwitchToPlan}>
+                    <i className="ph ph-clipboard-text" /> View order sheet
+                  </button>
+                </div>
+              </div>
+            );
+          }
+          return (
+            <div key={i} className={`msg rise ${m.role === "user" ? "user" : ""}`}>
               <div className="who">
                 <i className={`ph ${m.role === "user" ? "ph-user" : "ph-storefront"}`} />
                 {m.role === "user" ? "You" : "Warung"}
               </div>
               <div className="whitespace-pre-wrap text-[13px]">{m.text}</div>
             </div>
-          )
-        )}
+          );
+        })}
 
         {running && !streaming && (
           <div className="msg rise">
@@ -155,106 +197,16 @@ export default function ChatTab({ run, running, onRun, onSwitchToPlan }: Props) 
             </div>
           </div>
         )}
+      </div>
 
-        {/* Plan summary */}
-        {run && !running && !streaming && (
-          <div className="panel rise" style={{ ["--d" as string]: "0ms" }}>
-            <div className="panel-head">
-              <i className="ph ph-clipboard-text" /> Plan summary
-              <span className="flex-1" />
-              <span className="n">READY</span>
-            </div>
-            <div className="metrics-grid !border-0 !shadow-none">
-              <div className="m">
-                <div className="k">Actions</div>
-                <div className="v">{run.actions.filter((a) => a.category !== "ok").length}</div>
-              </div>
-              <div className="m">
-                <div className="k">RM impact</div>
-                <div className="v text-risk-500">{impact.toFixed(2)}</div>
-              </div>
-              <div className="m">
-                <div className="k">Order units</div>
-                <div className="v">{run.actions.reduce((s, a) => s + a.orderQty, 0)}</div>
-              </div>
-              <div className="m">
-                <div className="k">Savings</div>
-                <div className="v text-stock-500">{run.savingsPercent}%</div>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-3 border-t-[2px] border-cream-100 p-4">
-              <span className="tick flex-1 min-w-[150px]">Backtest vs same-day-last-week baseline</span>
-              <button className="btn-primary" onClick={onSwitchToPlan}>
-                <i className="ph ph-clipboard-text" /> View order sheet
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Menu today */}
-        <div className="panel rise" style={{ ["--d" as string]: "40ms" }}>
-          <div className="panel-head">
-            <i className="ph ph-bowl-food" /> Menu today
-            <span className="flex-1" />
-            <span className="n">{SAMPLE_ITEMS.length} DISHES</span>
-          </div>
-          <div>
-            {SAMPLE_ITEMS.map((item) => {
-              const action = run?.actions.find((a) => a.itemId === item.id);
-              const isOut = action ? action.category === "stockout" : item.stock === 0;
-              const isMarkdown = action ? action.category === "expiry" : !!item.expiry;
-              const price = item.expiry ? item.price * (1 - item.expiry.discount) : item.price;
-              return (
-                <div key={item.id} className={`menu-row ${isOut ? "is-out" : ""} ${isMarkdown ? "is-markdown" : ""}`}>
-                  <div className="ico">
-                    <i className={`ph ${ICONS[item.id] ?? "ph-bowl-food"}`} />
-                  </div>
-                  <div>
-                    <div className="menu-line">
-                      <span className="name">{item.name}</span>
-                      <span className="leader" />
-                      <span className={`price ${isMarkdown ? "warn" : isOut ? "risk" : ""}`}>RM {price.toFixed(2)}</span>
-                    </div>
-                    <div className="menu-meta">
-                      {CODES[item.id]} · {item.stock} on shelf
-                    </div>
-                    <div className="menu-stamps">
-                      {isOut && (
-                        <span className="stamp out">
-                          <i className="ph ph-warning" /> Sold out
-                        </span>
-                      )}
-                      {isMarkdown && (
-                        <span className="stamp warn">
-                          <i className="ph ph-tag" /> Markdown
-                        </span>
-                      )}
-                      {!isOut && !isMarkdown && (
-                        <span className="stamp ok">
-                          <i className="ph ph-check" /> Healthy
-                        </span>
-                      )}
-                      {action && action.rmImpact > 0 && (
-                        <span className="stamp">RM {action.rmImpact.toFixed(2)}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Suggestions */}
-        <div className="rise flex flex-wrap gap-2" style={{ ["--d" as string]: "80ms" }}>
-          {SUGGESTIONS.map((s) => (
-            <button key={s} className="chip-suggest" onClick={() => send(s)}>
-              <i className="ph ph-play" />
-              {s}
-            </button>
-          ))}
-        </div>
-        <div ref={endRef} />
+      {/* Suggestions — fixed above the composer */}
+      <div className="flex flex-wrap gap-2 border-t-[2px] border-cream-100 bg-forest-800 px-4 pt-3 pb-1">
+        {SUGGESTIONS.map((s) => (
+          <button key={s} className="chip-suggest" onClick={() => send(s)}>
+            <i className="ph ph-play" />
+            {s}
+          </button>
+        ))}
       </div>
 
       {/* Composer */}
