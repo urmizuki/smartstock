@@ -1,0 +1,1490 @@
+<!doctype html>
+<!--
+  SmartStock — System v4 · NEO-BRUTALIST (domain pass)
+  Identity: market-stall / warehouse labelling. Crate labels, price tags, till receipts,
+  shelf counts. Brutalist structure carrying a real canteen-stock skin.
+
+  Rules (industrial-brutalist-ui, web-native flavour):
+    · Zero border-radius. No gradients, no blur, no translucency.
+    · Hard solid shadows only. Thick visible borders. Boxed compartments.
+    · Macro = heavy grotesk uppercase. Micro = monospace uppercase.
+    · Every accent locked to one role.
+
+  Fonts + icons load from CDN for this single-file prototype. In production: self-host.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>SmartStock — Canteen Stock Control</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+    <style>
+      /* ============================================================
+         TOKENS
+         ============================================================ */
+      :root {
+        --paper: #f0efe9;
+        --paper-2: #ffffff;
+        --ink: #0a0a0a;
+
+        /* Accents — one role each */
+        --blue: #2b5bff; /* primary action */
+        --lime: #c6f24e; /* ok / money recovered */
+        --pink: #ff4fa3; /* risk / money at risk */
+        --yellow: #ffd23f; /* warn / markdown */
+
+        --muted: #5b5b57; /* 5.9:1 on paper — AA floor */
+
+        --bw: 3px;
+        --bw-2: 2px;
+
+        --sh-1: 4px 4px 0 var(--ink);
+        --sh-2: 6px 6px 0 var(--ink);
+        --sh-3: 8px 8px 0 var(--ink);
+        --sh-flat: 0 0 0 var(--ink);
+
+        --s-1: 4px;
+        --s-2: 8px;
+        --s-3: 12px;
+        --s-4: 16px;
+        --s-5: 20px;
+        --s-6: 24px;
+        --s-7: 32px;
+        --s-8: 48px;
+
+        --font-display: "Archivo Black", "Archivo", system-ui, sans-serif;
+        --font-ui: "Archivo", system-ui, sans-serif;
+        --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+        --fs-xs: 11px;
+        --fs-sm: 13px;
+        --fs-base: 15px;
+        --fs-md: 17px;
+        --fs-lg: 22px;
+        --fs-xl: 30px;
+        --fs-2xl: clamp(34px, 5vw, 52px);
+        --fs-macro: clamp(30px, 8vw, 96px);
+
+        --ease: cubic-bezier(0.2, 0, 0, 1);
+        --dur: 120ms;
+
+        /* Icon font sizing */
+        --icon-sm: 15px;
+        --icon-md: 19px;
+        --icon-lg: 26px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        min-height: 100dvh;
+        color: var(--ink);
+        font-family: var(--font-ui);
+        font-size: var(--fs-base);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        background-color: var(--paper);
+        background-image: linear-gradient(rgba(10, 10, 10, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(10, 10, 10, 0.05) 1px, transparent 1px);
+        background-size: 26px 26px;
+      }
+      h1,
+      h2,
+      h3,
+      h4,
+      p,
+      ul,
+      dl,
+      dd,
+      figure {
+        margin: 0;
+      }
+      ul,
+      dl {
+        padding: 0;
+        list-style: none;
+      }
+      button,
+      input {
+        font: inherit;
+      }
+      i[class^="ph"] {
+        display: inline-block;
+        line-height: 1;
+      }
+
+      .macro {
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        letter-spacing: -0.035em;
+        line-height: 0.9;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+      }
+      .tick {
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+      }
+      .num {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      :focus-visible {
+        outline: 3px solid var(--blue);
+        outline-offset: 2px;
+      }
+
+      /* ============================================================
+         PAGE CHROME
+         ============================================================ */
+      .doc {
+        max-width: 1220px;
+        margin: 0 auto;
+        padding: var(--s-7) var(--s-4) var(--s-8);
+      }
+
+      /* ---- Brand masthead: crate label ---- */
+      .masthead {
+        display: grid;
+        grid-template-columns: 1fr;
+        border: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+        box-shadow: var(--sh-3);
+        margin-bottom: var(--s-8);
+      }
+      @media (min-width: 860px) {
+        .masthead {
+          grid-template-columns: 260px 1fr;
+        }
+      }
+      .masthead-brand {
+        border-bottom: var(--bw) solid var(--ink);
+        padding: var(--s-5);
+        display: flex;
+        flex-direction: column;
+        gap: var(--s-3);
+        background: var(--ink);
+        color: var(--paper-2);
+      }
+      @media (min-width: 860px) {
+        .masthead-brand {
+          border-bottom: 0;
+          border-right: var(--bw) solid var(--ink);
+        }
+      }
+      .crate-mark {
+        width: 54px;
+        height: 54px;
+        background: var(--lime);
+        color: var(--ink);
+        display: grid;
+        place-items: center;
+        border: var(--bw-2) solid var(--paper-2);
+        font-size: 30px;
+        flex: none;
+      }
+      .masthead-brand .name {
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        font-size: var(--fs-lg);
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .masthead-brand .brand-tag {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .masthead-brand dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 4px 10px;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-top: auto;
+      }
+      .masthead-brand dt {
+        color: rgba(255, 255, 255, 0.55);
+      }
+      .masthead-brand dd {
+        color: var(--paper-2);
+      }
+
+      .masthead-body {
+        padding: var(--s-6);
+      }
+      .masthead-body h1 {
+        font-size: var(--fs-macro);
+      }
+      .masthead-body p {
+        color: var(--muted);
+        margin-top: var(--s-4);
+        max-width: 66ch;
+        font-size: var(--fs-sm);
+      }
+      .dials {
+        display: flex;
+        gap: var(--s-2);
+        flex-wrap: wrap;
+        margin-top: var(--s-5);
+      }
+
+      /* ---- Section headers ---- */
+      section.block {
+        margin-bottom: var(--s-8);
+      }
+      .block-head {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        margin-bottom: var(--s-4);
+      }
+      .block-head .ico {
+        width: 34px;
+        height: 34px;
+        background: var(--ink);
+        color: var(--lime);
+        display: grid;
+        place-items: center;
+        font-size: var(--icon-md);
+        flex: none;
+      }
+      .block-head h2 {
+        font-size: var(--fs-xl);
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+      }
+      .block-head .rule {
+        flex: 1;
+        height: var(--bw-2);
+        background: var(--ink);
+      }
+      .block-head .tick {
+        white-space: nowrap;
+      }
+      @media (max-width: 560px) {
+        .block-head h2 {
+          font-size: var(--fs-lg);
+          white-space: normal;
+        }
+        .block-head .rule {
+          display: none;
+        }
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--s-4);
+      }
+      @media (min-width: 780px) {
+        .grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .stack {
+        display: grid;
+        gap: var(--s-4);
+      }
+
+      .panel {
+        background: var(--paper-2);
+        border: var(--bw) solid var(--ink);
+        box-shadow: var(--sh-2);
+        padding: var(--s-5);
+      }
+      .panel-flat {
+        background: var(--paper-2);
+        border: var(--bw-2) solid var(--ink);
+        padding: var(--s-4);
+      }
+      .panel-tag {
+        display: flex;
+        align-items: center;
+        gap: var(--s-2);
+        margin-bottom: var(--s-4);
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: var(--fs-sm);
+      }
+
+      /* ============================================================
+         MOTIFS — barcode, price tag, stamp
+         ============================================================ */
+      .barcode {
+        height: 16px;
+        background: repeating-linear-gradient(
+          90deg,
+          var(--ink) 0 2px,
+          transparent 2px 5px,
+          var(--ink) 5px 6px,
+          transparent 6px 9px,
+          var(--ink) 9px 13px,
+          transparent 13px 16px
+        );
+        opacity: 0.85;
+      }
+      .rule-barcode {
+        border: 0;
+        border-top: var(--bw-2) solid var(--ink);
+        margin: var(--s-4) 0 0;
+      }
+
+      /* Price tag: boxed money with a punched hole */
+      .ptag {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 9px 5px 7px;
+        border: var(--bw-2) solid var(--ink);
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: var(--fs-sm);
+        letter-spacing: -0.01em;
+        background: var(--paper-2);
+      }
+      .ptag::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        background: var(--ink);
+        box-shadow: 0 0 0 1px var(--ink);
+        flex: none;
+      }
+      .ptag.risk {
+        background: var(--pink);
+      }
+      .ptag.ok {
+        background: var(--lime);
+      }
+      .ptag.warn {
+        background: var(--yellow);
+      }
+
+      .stamp {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        border: var(--bw-2) solid var(--ink);
+        padding: 3px 7px;
+        background: var(--paper);
+      }
+
+      /* ============================================================
+         CONTROLS
+         ============================================================ */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--s-2);
+        padding: 12px 16px;
+        border: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+        color: var(--ink);
+        font-family: var(--font-ui);
+        font-weight: 800;
+        font-size: var(--fs-sm);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        white-space: nowrap;
+        box-shadow: var(--sh-1);
+        transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+          background-color var(--dur) var(--ease);
+      }
+      .btn:active {
+        transform: translate(4px, 4px);
+        box-shadow: var(--sh-flat);
+      }
+      .btn i {
+        font-size: var(--icon-sm);
+      }
+      .btn-primary {
+        background: var(--blue);
+        color: #fff;
+      }
+      .btn-danger {
+        background: var(--pink);
+      }
+      .btn-block {
+        width: 100%;
+      }
+      .btn-sm {
+        padding: 8px 11px;
+        font-size: var(--fs-xs);
+      }
+      .btn[disabled] {
+        background: var(--paper);
+        color: var(--muted);
+        box-shadow: var(--sh-flat);
+        cursor: not-allowed;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .btn:not([disabled]):hover {
+          transform: translate(-2px, -2px);
+          box-shadow: var(--sh-2);
+        }
+        .btn-primary:hover {
+          background: #1f4aeb;
+        }
+      }
+
+      .field-group {
+        display: grid;
+        gap: var(--s-2);
+      }
+      .field-label {
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+      .field {
+        width: 100%;
+        padding: 12px 14px;
+        background: var(--paper-2);
+        border: var(--bw-2) solid var(--ink);
+        font-family: var(--font-mono);
+        font-size: var(--fs-sm);
+      }
+      .field::placeholder {
+        color: var(--muted);
+      }
+      .field:focus {
+        outline: none;
+        border-color: var(--blue);
+        box-shadow: var(--sh-1);
+      }
+      .field.is-error {
+        border-color: var(--pink);
+      }
+      .field-hint {
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        color: var(--muted);
+      }
+      .field-error {
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        background: var(--pink);
+        border: var(--bw-2) solid var(--ink);
+        padding: 4px 8px;
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        width: fit-content;
+      }
+
+      .seg {
+        display: inline-flex;
+        border: var(--bw-2) solid var(--ink);
+        background: var(--paper-2);
+        box-shadow: var(--sh-1);
+        flex-wrap: wrap;
+      }
+      .seg button {
+        padding: 8px 12px;
+        border: 0;
+        border-right: var(--bw-2) solid var(--ink);
+        background: transparent;
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+        transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+      }
+      .seg button:last-child {
+        border-right: 0;
+      }
+      .seg button[aria-pressed="true"] {
+        background: var(--ink);
+        color: var(--paper-2);
+      }
+
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--s-3);
+        cursor: pointer;
+        user-select: none;
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .toggle input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .toggle .box {
+        width: 34px;
+        height: 34px;
+        border: var(--bw-2) solid var(--ink);
+        background: var(--paper-2);
+        box-shadow: var(--sh-1);
+        display: grid;
+        place-items: center;
+        flex: none;
+        transition: background-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+          transform var(--dur) var(--ease);
+      }
+      .toggle input:checked + .box {
+        background: var(--lime);
+      }
+      .toggle input:checked + .box i {
+        font-size: var(--icon-sm);
+      }
+      .toggle:active .box {
+        transform: translate(2px, 2px);
+        box-shadow: var(--sh-flat);
+      }
+      .toggle input:focus-visible + .box {
+        outline: 3px solid var(--blue);
+        outline-offset: 2px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 8px;
+        border: var(--bw-2) solid var(--ink);
+        background: var(--paper-2);
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .tag i {
+        font-size: 13px;
+      }
+      .tag-ok {
+        background: var(--lime);
+      }
+      .tag-warn {
+        background: var(--yellow);
+      }
+      .tag-risk {
+        background: var(--pink);
+      }
+      .tag-accent {
+        background: var(--blue);
+        color: #fff;
+      }
+      .tag-solid {
+        background: var(--ink);
+        color: var(--paper-2);
+      }
+
+      /* ============================================================
+         SHELL SPECIMEN
+         ============================================================ */
+      .shell {
+        border: var(--bw) solid var(--ink);
+        box-shadow: var(--sh-3);
+        background: var(--paper);
+        display: flex;
+        min-height: 680px;
+        overflow: hidden;
+      }
+      .rail {
+        display: none;
+        flex-direction: column;
+        width: 244px;
+        flex: 0 0 244px;
+        background: var(--paper-2);
+        border-right: var(--bw) solid var(--ink);
+      }
+      .rail-brand {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        padding: var(--s-4);
+        border-bottom: var(--bw) solid var(--ink);
+      }
+      .monogram {
+        width: 40px;
+        height: 40px;
+        background: var(--ink);
+        color: var(--lime);
+        display: grid;
+        place-items: center;
+        font-size: var(--icon-md);
+        flex: none;
+      }
+      .rail-brand .name {
+        font-family: var(--font-display);
+        font-size: var(--fs-md);
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .rail-brand .sub {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin-top: 3px;
+      }
+      .rail-nav {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+      }
+      .rail-item {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        width: 100%;
+        padding: 14px var(--s-4);
+        border: 0;
+        border-bottom: var(--bw-2) solid var(--ink);
+        background: transparent;
+        color: var(--ink);
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+      }
+      .rail-item i {
+        font-size: var(--icon-md);
+        flex: none;
+      }
+      .rail-item .count {
+        margin-left: auto;
+      }
+      .rail-item[aria-current="page"] {
+        background: var(--blue);
+        color: #fff;
+        box-shadow: inset 6px 0 0 var(--ink);
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .rail-item:not([aria-current="page"]):hover {
+          background: var(--paper);
+        }
+      }
+      .rail-foot {
+        padding: var(--s-4);
+        border-top: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+      }
+
+      .main-col {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--paper);
+      }
+      .ticker {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        padding: 8px var(--s-4);
+        background: var(--ink);
+        color: var(--paper-2);
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      .ticker .sep {
+        color: var(--lime);
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: var(--s-4);
+        padding: var(--s-3) var(--s-4);
+        border-bottom: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+      }
+      .topbar .screen-title {
+        font-family: var(--font-display);
+        font-size: var(--fs-md);
+        text-transform: uppercase;
+      }
+      .topbar .spacer {
+        flex: 1;
+      }
+      .topbar .switches {
+        display: flex;
+        gap: var(--s-4);
+        align-items: center;
+      }
+      .canvas {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: var(--s-2);
+        padding: var(--s-7);
+        color: var(--muted);
+        text-align: center;
+      }
+      .canvas strong {
+        font-family: var(--font-display);
+        font-size: var(--fs-lg);
+        text-transform: uppercase;
+        color: var(--ink);
+      }
+      .canvas .ph {
+        font-size: 34px;
+        color: var(--ink);
+      }
+
+      .bottombar {
+        display: flex;
+        border-top: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+      }
+      .bottombar .rail-item {
+        flex: 1;
+        flex-direction: column;
+        gap: 4px;
+        padding: 10px 0;
+        border-bottom: 0;
+        border-right: var(--bw-2) solid var(--ink);
+        text-align: center;
+        font-size: 10px;
+      }
+      .bottombar .rail-item[aria-current="page"] {
+        box-shadow: inset 0 -5px 0 var(--ink);
+      }
+      .bottombar .rail-item:last-child {
+        border-right: 0;
+      }
+      @media (min-width: 900px) {
+        .rail {
+          display: flex;
+        }
+        .bottombar {
+          display: none;
+        }
+      }
+
+      /* ============================================================
+         STOCK BOARD — the domain specimen
+         ============================================================ */
+      .board-head {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        flex-wrap: wrap;
+        margin-bottom: var(--s-4);
+      }
+      .board-head .title {
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        font-size: var(--fs-lg);
+        letter-spacing: -0.02em;
+      }
+      .board-head .spacer {
+        flex: 1;
+      }
+
+      /* gap:3px on a black parent = razor-thin dividers, no border soup.
+         Column count divides 6 items evenly so there is never an empty cell. */
+      .board {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--bw);
+        background: var(--ink);
+        border: var(--bw) solid var(--ink);
+        box-shadow: var(--sh-2);
+      }
+      @media (min-width: 620px) {
+        .board {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (min-width: 1000px) {
+        .board {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      .cell {
+        background: var(--paper-2);
+        padding: var(--s-4);
+        display: flex;
+        flex-direction: column;
+        gap: var(--s-3);
+        min-height: 168px;
+      }
+      .cell-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: var(--s-2);
+      }
+      .cell-id {
+        display: flex;
+        align-items: center;
+        gap: var(--s-2);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+      .cell-id .ph {
+        font-size: var(--icon-md);
+        color: var(--ink);
+      }
+      .cell-name {
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        font-size: var(--fs-md);
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+      }
+      .cell-supplier {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+      }
+      .cell-qty {
+        display: flex;
+        align-items: baseline;
+        gap: var(--s-2);
+        margin-top: auto;
+      }
+      .cell-qty .n {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 40px;
+        line-height: 0.9;
+        letter-spacing: -0.03em;
+      }
+      .cell-qty .u {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+      .cell-qty.out .n {
+        color: var(--pink);
+      }
+      .cell-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--s-2);
+        border-top: var(--bw-2) solid var(--ink);
+        padding-top: var(--s-3);
+      }
+      .cell-foot .lbl {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+      }
+
+      /* ============================================================
+         SPEC HELPERS
+         ============================================================ */
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: var(--s-3);
+      }
+      .swatch {
+        border: var(--bw-2) solid var(--ink);
+      }
+      .swatch .fill {
+        height: 62px;
+        border-bottom: var(--bw-2) solid var(--ink);
+      }
+      .swatch .meta {
+        padding: 8px 10px;
+        background: var(--paper-2);
+      }
+      .swatch .meta .n {
+        font-size: var(--fs-xs);
+        font-weight: 700;
+      }
+      .swatch .meta .v {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--muted);
+      }
+
+      .type-row {
+        display: flex;
+        align-items: baseline;
+        gap: var(--s-4);
+        padding: var(--s-3) 0;
+        border-bottom: var(--bw-2) solid var(--ink);
+      }
+      .type-row:last-child {
+        border-bottom: 0;
+      }
+      .type-row .tagcell {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        color: var(--muted);
+        flex: none;
+        width: 92px;
+      }
+
+      .meter-row {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        padding: 4px 0;
+      }
+      .meter-row .bar {
+        height: 12px;
+        background: var(--lime);
+        border: var(--bw-2) solid var(--ink);
+      }
+      .meter-row .lbl {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--muted);
+        width: 46px;
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        flex-wrap: wrap;
+      }
+      .note {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+        margin-top: var(--s-3);
+        line-height: 1.6;
+      }
+
+      /* Receipt */
+      .receipt {
+        background: var(--paper-2);
+        border: var(--bw-2) solid var(--ink);
+        padding: var(--s-4);
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        max-width: 340px;
+      }
+      .receipt .rline {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        padding: 3px 0;
+      }
+      .receipt .dots {
+        flex: 1;
+        border-bottom: 2px dotted var(--ink);
+        transform: translateY(-3px);
+      }
+      .receipt .rtotal {
+        display: flex;
+        justify-content: space-between;
+        border-top: var(--bw-2) solid var(--ink);
+        margin-top: 6px;
+        padding-top: 8px;
+        font-weight: 700;
+        font-size: var(--fs-sm);
+      }
+      .receipt .rhead {
+        text-align: center;
+        padding-bottom: 6px;
+        border-bottom: var(--bw-2) solid var(--ink);
+        margin-bottom: 6px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+      }
+
+      /* ============================================================
+         MOTION
+         ============================================================ */
+      @media (prefers-reduced-motion: no-preference) {
+        .rise {
+          opacity: 1;
+          transform: translate(0, 0);
+          transition: opacity 220ms var(--ease), transform 220ms var(--ease);
+          transition-delay: var(--d, 0ms);
+        }
+        @starting-style {
+          .rise {
+            opacity: 0;
+            transform: translate(0, 10px);
+          }
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="doc">
+      <!-- ============================ Masthead ============================ -->
+      <header class="masthead rise">
+        <div class="masthead-brand">
+          <div class="crate-mark"><i class="ph ph-storefront"></i></div>
+          <div>
+            <div class="name">SmartStock</div>
+            <div class="brand-tag">Canteen stock control</div>
+          </div>
+          <dl>
+            <dt>Outlet</dt>
+            <dd>Oreo · UPM</dd>
+            <dt>Pin</dt>
+            <dd>DEMO-UPM-001</dd>
+            <dt>Rev</dt>
+            <dd>4.0 / BRUT</dd>
+            <dt>Items</dt>
+            <dd>06 on shelf</dd>
+          </dl>
+        </div>
+        <div class="masthead-body">
+          <h1 class="macro">Stock<br />Control</h1>
+          <p>
+            One prompt becomes a ranked morning plan for a campus canteen: what to restock, what to mark down
+            before it expires, and what to leave alone — each priced in ringgit.
+          </p>
+          <div class="dials">
+            <span class="tag tag-solid"><i class="ph ph-package"></i>variance 4</span>
+            <span class="tag"><i class="ph ph-lightning"></i>motion 3</span>
+            <span class="tag"><i class="ph ph-scales"></i>density 6</span>
+          </div>
+          <div class="barcode" style="margin-top: var(--s-5)"></div>
+        </div>
+      </header>
+
+      <!-- ============================ Stock board ============================ -->
+      <section class="block">
+        <div class="block-head">
+          <span class="ico"><i class="ph ph-storefront"></i></span>
+          <h2>Today's shelf</h2>
+          <span class="rule"></span>
+          <span class="tick">Mon 12 Oct · 05:40</span>
+        </div>
+
+        <div class="board-head">
+          <span class="stamp">Perishable</span>
+          <span class="tag tag-risk"><i class="ph ph-warning"></i>3 stockout</span>
+          <span class="tag tag-warn"><i class="ph ph-tag"></i>1 markdown</span>
+          <span class="tag tag-ok"><i class="ph ph-check"></i>2 healthy</span>
+          <span class="spacer"></span>
+          <span class="tick">06 SKU · 120 UNITS TO ORDER</span>
+        </div>
+
+        <div class="board rise" style="--d: 40ms">
+          <article class="cell">
+            <div class="cell-top">
+              <span class="cell-id"><i class="ph ph-bowl-food"></i>MEL-01</span>
+              <span class="tag tag-ok"><i class="ph ph-check"></i>ok</span>
+            </div>
+            <div>
+              <div class="cell-name">Nasi lemak</div>
+              <div class="cell-supplier">Makcik Kitchen Sdn Bhd</div>
+            </div>
+            <div class="cell-qty"><span class="n">44</span><span class="u">units on shelf</span></div>
+            <div class="cell-foot">
+              <span class="ptag">RM 3.00</span>
+              <span class="lbl">MARGIN RM 1.20</span>
+            </div>
+          </article>
+
+          <article class="cell">
+            <div class="cell-top">
+              <span class="cell-id"><i class="ph ph-coffee"></i>DRK-02</span>
+              <span class="tag tag-risk"><i class="ph ph-warning"></i>stockout</span>
+            </div>
+            <div>
+              <div class="cell-name">Teh tarik</div>
+              <div class="cell-supplier">Beverage Supply Co.</div>
+            </div>
+            <div class="cell-qty out"><span class="n">00</span><span class="u">units on shelf</span></div>
+            <div class="cell-foot">
+              <span class="ptag">RM 2.50</span>
+              <span class="lbl">ORDER 40 · RM 79.20 AT RISK</span>
+            </div>
+          </article>
+
+          <article class="cell">
+            <div class="cell-top">
+              <span class="cell-id"><i class="ph ph-bowl-food"></i>MEL-03</span>
+              <span class="tag tag-ok"><i class="ph ph-check"></i>ok</span>
+            </div>
+            <div>
+              <div class="cell-name">Mee goreng</div>
+              <div class="cell-supplier">Makcik Kitchen Sdn Bhd</div>
+            </div>
+            <div class="cell-qty"><span class="n">21</span><span class="u">units on shelf</span></div>
+            <div class="cell-foot">
+              <span class="ptag">RM 4.50</span>
+              <span class="lbl">MARGIN RM 2.50</span>
+            </div>
+          </article>
+
+          <article class="cell">
+            <div class="cell-top">
+              <span class="cell-id"><i class="ph ph-cookie"></i>SNK-04</span>
+              <span class="tag tag-risk"><i class="ph ph-warning"></i>stockout</span>
+            </div>
+            <div>
+              <div class="cell-name">Karipap</div>
+              <div class="cell-supplier">Snack Distributors</div>
+            </div>
+            <div class="cell-qty out"><span class="n">00</span><span class="u">units on shelf</span></div>
+            <div class="cell-foot">
+              <span class="ptag">RM 1.00</span>
+              <span class="lbl">ORDER 50 · RM 24.00 AT RISK</span>
+            </div>
+          </article>
+
+          <article class="cell">
+            <div class="cell-top">
+              <span class="cell-id"><i class="ph ph-bread"></i>MEL-05</span>
+              <span class="tag tag-warn"><i class="ph ph-tag"></i>markdown</span>
+            </div>
+            <div>
+              <div class="cell-name">Sandwich tuna</div>
+              <div class="cell-supplier">FreshBites Supply</div>
+            </div>
+            <div class="cell-qty"><span class="n">30</span><span class="u">units on shelf</span></div>
+            <div class="cell-foot">
+              <span class="ptag warn">RM 2.80</span>
+              <span class="lbl">-30% · EXPIRES 18:00</span>
+            </div>
+          </article>
+
+          <article class="cell">
+            <div class="cell-top">
+              <span class="cell-id"><i class="ph ph-cake"></i>SNK-06</span>
+              <span class="tag tag-risk"><i class="ph ph-warning"></i>stockout</span>
+            </div>
+            <div>
+              <div class="cell-name">Kuih lapis</div>
+              <div class="cell-supplier">Kuih Express</div>
+            </div>
+            <div class="cell-qty out"><span class="n">00</span><span class="u">units on shelf</span></div>
+            <div class="cell-foot">
+              <span class="ptag">RM 1.50</span>
+              <span class="lbl">ORDER 30 · RM 28.80 AT RISK</span>
+            </div>
+          </article>
+        </div>
+        <p class="note">
+          Shelf board: black bed, 3px gutters, one cell per SKU. Qty is the hero; money is a punched price tag.
+        </p>
+      </section>
+
+      <!-- ============================ App shell ============================ -->
+      <section class="block">
+        <div class="block-head">
+          <span class="ico"><i class="ph ph-sidebar"></i></span>
+          <h2>App shell</h2>
+          <span class="rule"></span>
+          <span class="tick">specimen</span>
+        </div>
+
+        <div class="shell rise" style="--d: 40ms">
+          <aside class="rail" aria-label="Primary">
+            <div class="rail-brand">
+              <div class="monogram"><i class="ph ph-storefront"></i></div>
+              <div>
+                <div class="name">SmartStock</div>
+                <div class="sub">Oreo · UPM</div>
+              </div>
+            </div>
+
+            <nav class="rail-nav">
+              <button class="rail-item" aria-current="page">
+                <i class="ph ph-chats"></i>Chat
+              </button>
+              <button class="rail-item">
+                <i class="ph ph-clipboard-text"></i>Plan
+                <span class="count">04</span>
+              </button>
+              <button class="rail-item">
+                <i class="ph ph-package"></i>Stock
+                <span class="count">06</span>
+              </button>
+              <button class="rail-item">
+                <i class="ph ph-crown-simple"></i>Pro
+              </button>
+            </nav>
+
+            <div class="rail-foot">
+              <button class="btn btn-primary btn-block"><i class="ph ph-play"></i>Run agents</button>
+            </div>
+          </aside>
+
+          <div class="main-col">
+            <div class="ticker">
+              <span><i class="ph ph-storefront"></i> CANTEEN 01</span><span class="sep">///</span>
+              <span>UNIT D-01</span><span class="sep">///</span>
+              <span>PIN DEMO-UPM-001</span><span class="sep">///</span>
+              <span>SYNC 05:40</span><span class="sep">///</span>
+              <span>STATUS: SAMPLE DATA</span>
+            </div>
+
+            <div class="topbar">
+              <i class="ph ph-chats" style="font-size: var(--icon-md)"></i>
+              <span class="screen-title">Chat</span>
+              <span class="spacer"></span>
+              <div class="switches">
+                <label class="toggle"><input type="checkbox" /><span class="box"></span>Payday</label>
+                <label class="toggle"><input type="checkbox" /><span class="box"></span>Rain</label>
+              </div>
+            </div>
+
+            <div class="canvas">
+              <i class="ph ph-storefront"></i>
+              <strong>Screen canvas</strong>
+              <span class="mono" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em">CHAT · PLAN · STOCK · PRO</span>
+            </div>
+
+            <nav class="bottombar" aria-label="Primary">
+              <button class="rail-item" aria-current="page"><i class="ph ph-chats"></i>Chat</button>
+              <button class="rail-item"><i class="ph ph-clipboard-text"></i>Plan</button>
+              <button class="rail-item"><i class="ph ph-package"></i>Stock</button>
+              <button class="rail-item"><i class="ph ph-crown-simple"></i>Pro</button>
+            </nav>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ Foundations ============================ -->
+      <section class="block">
+        <div class="block-head">
+          <span class="ico"><i class="ph ph-swatches"></i></span>
+          <h2>Foundations</h2>
+          <span class="rule"></span>
+          <span class="tick">tokens</span>
+        </div>
+
+        <div class="stack">
+          <div class="panel rise" style="--d: 0ms">
+            <div class="panel-tag"><i class="ph ph-paint-bucket"></i> COLOUR</div>
+            <div class="swatches">
+              <div class="swatch"><div class="fill" style="background: #f0efe9"></div><div class="meta"><div class="n">Paper</div><div class="v">#F0EFE9</div></div></div>
+              <div class="swatch"><div class="fill" style="background: #ffffff"></div><div class="meta"><div class="n">Panel</div><div class="v">#FFFFFF</div></div></div>
+              <div class="swatch"><div class="fill" style="background: #0a0a0a"></div><div class="meta"><div class="n">Ink · 19:1</div><div class="v">#0A0A0A</div></div></div>
+              <div class="swatch"><div class="fill" style="background: #5b5b57"></div><div class="meta"><div class="n">Muted · 5.9:1</div><div class="v">#5B5B57</div></div></div>
+              <div class="swatch"><div class="fill" style="background: #2b5bff"></div><div class="meta"><div class="n">Blue · action</div><div class="v">#2B5BFF</div></div></div>
+              <div class="swatch"><div class="fill" style="background: #c6f24e"></div><div class="meta"><div class="n">Lime · recovered</div><div class="v">#C6F24E</div></div></div>
+              <div class="swatch"><div class="fill" style="background: #ff4fa3"></div><div class="meta"><div class="n">Pink · at risk</div><div class="v">#FF4FA3</div></div></div>
+              <div class="swatch"><div class="fill" style="background: #ffd23f"></div><div class="meta"><div class="n">Yellow · markdown</div><div class="v">#FFD23F</div></div></div>
+            </div>
+            <p class="note">One role per accent. Pink = money at risk, lime = money recovered, blue = action. Muted is the AA floor.</p>
+          </div>
+
+          <div class="grid-2">
+            <div class="panel rise" style="--d: 40ms">
+              <div class="panel-tag"><i class="ph ph-text-aa"></i> TYPE</div>
+              <div class="type-row">
+                <span class="tagcell">macro</span>
+                <span class="macro" style="font-size: var(--fs-2xl)">Restock</span>
+              </div>
+              <div class="type-row">
+                <span class="tagcell">display / 30</span>
+                <span style="font-size: var(--fs-xl); font-weight: 800; text-transform: uppercase; letter-spacing: -0.02em">Ranked actions</span>
+              </div>
+              <div class="type-row">
+                <span class="tagcell">body / 15</span>
+                <span style="font-size: var(--fs-base); color: var(--muted); max-width: 62ch">
+                  Stock sits below expected demand, so the plan orders more before the morning rush.
+                </span>
+              </div>
+              <div class="type-row">
+                <span class="tagcell">micro / 11</span>
+                <span class="tick">ORDER · 40 UNITS · BEVERAGE SUPPLY CO.</span>
+              </div>
+              <div class="type-row">
+                <span class="tagcell">numeric</span>
+                <span class="num" style="font-size: var(--fs-xl)">RM 152.16</span>
+              </div>
+              <p class="note">Archivo Black macro · Archivo UI · JetBrains Mono for every number and label.</p>
+            </div>
+
+            <div class="panel rise" style="--d: 80ms">
+              <div class="panel-tag"><i class="ph ph-receipt"></i> TILL RECEIPT</div>
+              <div class="receipt">
+                <div class="rhead">SMARTSTOCK / ORDER</div>
+                <div class="rline"><span>Teh tarik ×40</span><span class="dots"></span><span>28.00</span></div>
+                <div class="rline"><span>Karipap ×50</span><span class="dots"></span><span>25.00</span></div>
+                <div class="rline"><span>Kuih lapis ×30</span><span class="dots"></span><span>18.00</span></div>
+                <div class="rtotal"><span>SPEND</span><span>RM 71.00</span></div>
+                <div class="rtotal" style="border: 0; padding-top: 2px"><span>AT RISK</span><span>RM 132.00</span></div>
+              </div>
+              <p class="note">Supplier message renders as a till receipt — dotted leaders, boxed total.</p>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="panel rise" style="--d: 120ms">
+              <div class="panel-tag"><i class="ph ph-ruler"></i> SPACE + RADIUS</div>
+              <div class="meter-row"><span class="lbl">s-1</span><span class="bar" style="width: 4px"></span></div>
+              <div class="meter-row"><span class="lbl">s-2</span><span class="bar" style="width: 8px"></span></div>
+              <div class="meter-row"><span class="lbl">s-3</span><span class="bar" style="width: 12px"></span></div>
+              <div class="meter-row"><span class="lbl">s-4</span><span class="bar" style="width: 16px"></span></div>
+              <div class="meter-row"><span class="lbl">s-6</span><span class="bar" style="width: 24px"></span></div>
+              <div class="meter-row"><span class="lbl">s-8</span><span class="bar" style="width: 48px"></span></div>
+              <p class="note">4px base. Radius is 0 everywhere — crate corners, never rounded.</p>
+            </div>
+
+            <div class="panel rise" style="--d: 160ms">
+              <div class="panel-tag"><i class="ph ph-stack"></i> ELEVATION + MOTION</div>
+              <div class="row" style="align-items: flex-start; margin-bottom: var(--s-3)">
+                <div style="margin: 0 8px 8px 0">
+                  <div class="panel-flat" style="width: 84px; height: 56px; box-shadow: var(--sh-1)"></div>
+                  <p class="note" style="margin-top: 6px">4px</p>
+                </div>
+                <div style="margin: 0 8px 8px 0">
+                  <div class="panel-flat" style="width: 84px; height: 56px; box-shadow: var(--sh-2)"></div>
+                  <p class="note" style="margin-top: 6px">6px</p>
+                </div>
+                <div style="margin: 0 8px 8px 0">
+                  <div class="panel-flat" style="width: 84px; height: 56px; box-shadow: var(--sh-3)"></div>
+                  <p class="note" style="margin-top: 6px">8px</p>
+                </div>
+              </div>
+              <p class="note">Hard solid shadows, zero blur. Press pushes 4px in; hover lifts 2px out. No bounce, no loops.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ Components ============================ -->
+      <section class="block">
+        <div class="block-head">
+          <span class="ico"><i class="ph ph-squares-four"></i></span>
+          <h2>Components</h2>
+          <span class="rule"></span>
+          <span class="tick">primitives</span>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel rise" style="--d: 0ms">
+            <div class="panel-tag"><i class="ph ph-cursor-click"></i> ACTIONS</div>
+            <div class="row" style="margin-bottom: var(--s-4)">
+              <button class="btn btn-primary"><i class="ph ph-play"></i>Run agents</button>
+              <button class="btn"><i class="ph ph-clipboard-text"></i>Review plan</button>
+              <button class="btn btn-danger"><i class="ph ph-trash"></i>Discard</button>
+            </div>
+            <div class="row">
+              <button class="btn btn-primary btn-sm"><i class="ph ph-shopping-cart"></i>Order</button>
+              <button class="btn btn-sm"><i class="ph ph-tag"></i>Markdown</button>
+              <button class="btn btn-sm" disabled>Disabled</button>
+            </div>
+            <p class="note">Press pushes in 4px and drops the shadow. One primary per view.</p>
+          </div>
+
+          <div class="panel rise" style="--d: 40ms">
+            <div class="panel-tag"><i class="ph ph-tag"></i> SHELF TAGS</div>
+            <div class="row" style="margin-bottom: var(--s-3)">
+              <span class="tag tag-risk"><i class="ph ph-warning"></i>stockout</span>
+              <span class="tag tag-warn"><i class="ph ph-tag"></i>expiry</span>
+              <span class="tag tag-ok"><i class="ph ph-check"></i>ok</span>
+            </div>
+            <div class="row" style="margin-bottom: var(--s-3)">
+              <span class="tag tag-accent"><i class="ph ph-seal-check"></i>validated</span>
+              <span class="tag tag-solid"><i class="ph ph-flask"></i>sample data</span>
+            </div>
+            <div class="row">
+              <span class="ptag risk"><i class="ph ph-trend-down"></i>RM 79.20</span>
+              <span class="ptag ok"><i class="ph ph-trend-up"></i>RM 20.16</span>
+            </div>
+            <p class="note">Tags carry an icon + word; price tags carry the hole punch. Colour encodes state only.</p>
+          </div>
+
+          <div class="panel rise" style="--d: 80ms">
+            <div class="panel-tag"><i class="ph ph-pencil-simple-line"></i> INPUTS</div>
+            <div class="field-group" style="margin-bottom: var(--s-5)">
+              <label class="field-label" for="g1">Supplier name</label>
+              <input class="field" id="g1" placeholder="MAKCIK KITCHEN" />
+              <span class="field-hint">USED ON THE ORDER SHEET.</span>
+            </div>
+            <div class="field-group">
+              <label class="field-label" for="g2">Daily budget (RM)</label>
+              <input class="field is-error" id="g2" value="999" />
+              <span class="field-error"><i class="ph ph-warning"></i>ABOVE RM250 CAP</span>
+            </div>
+            <p class="note">Label above, helper below, error below that. Placeholder is never the label.</p>
+          </div>
+
+          <div class="panel rise" style="--d: 120ms">
+            <div class="panel-tag"><i class="ph ph-toggle-left"></i> TOGGLE + SEGMENTED</div>
+            <div class="stack" style="gap: var(--s-4)">
+              <div class="row" style="gap: var(--s-5)">
+                <label class="toggle"><input type="checkbox" checked /><span class="box"><i class="ph ph-check"></i></span>Payday</label>
+                <label class="toggle"><input type="checkbox" /><span class="box"></span>Rain</label>
+              </div>
+              <div class="seg" role="group" aria-label="Plan view">
+                <button aria-pressed="true">By impact</button>
+                <button aria-pressed="false">By item</button>
+                <button aria-pressed="false">By supplier</button>
+              </div>
+            </div>
+            <p class="note">Toggle is a crate checkbox, not a pill. Segmented cells split by border.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>

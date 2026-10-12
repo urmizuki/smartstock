@@ -1,0 +1,994 @@
+<!doctype html>
+<!--
+  SmartStock — Chat screen, WARM / STALL direction
+  Palette : warm cream paper · espresso ink · tomato / mustard / avocado
+  Motifs  : market awning stripe · chalk special board · warung menu list · price stamps
+  Structure still neo-brutalist: 0 radius, hard shadows, thick borders.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>SmartStock — Warung Oreo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+    <style>
+      :root {
+        /* Warm substrate */
+        --paper: #f6eedd;
+        --paper-2: #fffbf2;
+        --ink: #17110b;
+
+        /* Food accents — one role each */
+        --tomato: #dc3a26; /* risk · stockout · money at risk */
+        --mustard: #f0b429; /* warn · markdown */
+        --avocado: #4f9d3a; /* ok · money recovered */
+        --brown: #8a5a2b; /* secondary / supplier */
+
+        --muted: #6b5a4a; /* 5.7:1 on paper */
+
+        --bw: 3px;
+        --bw-2: 2px;
+        --sh-1: 4px 4px 0 var(--ink);
+        --sh-2: 6px 6px 0 var(--ink);
+        --sh-flat: 0 0 0 var(--ink);
+
+        --s-1: 4px;
+        --s-2: 8px;
+        --s-3: 12px;
+        --s-4: 16px;
+        --s-5: 20px;
+        --s-6: 24px;
+
+        --font-display: "Archivo Black", "Archivo", system-ui, sans-serif;
+        --font-ui: "Archivo", system-ui, sans-serif;
+        --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+        --fs-xs: 11px;
+        --fs-sm: 13px;
+        --fs-base: 15px;
+        --fs-md: 17px;
+        --fs-lg: 22px;
+        --fs-macro: clamp(30px, 6vw, 52px);
+
+        --ease: cubic-bezier(0.2, 0, 0, 1);
+        --dur: 120ms;
+        --icon-md: 19px;
+        --icon-sm: 15px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        color: var(--ink);
+        font-family: var(--font-ui);
+        font-size: var(--fs-base);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        background-color: var(--paper);
+        background-image: radial-gradient(rgba(23, 17, 11, 0.055) 1px, transparent 1.2px);
+        background-size: 18px 18px;
+        overflow: hidden;
+      }
+      h1,
+      h2,
+      h3,
+      p,
+      ul {
+        margin: 0;
+      }
+      ul {
+        padding: 0;
+        list-style: none;
+      }
+      button,
+      input {
+        font: inherit;
+      }
+      i[class^="ph"] {
+        display: inline-block;
+        line-height: 1;
+      }
+
+      .macro {
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        letter-spacing: -0.035em;
+        line-height: 0.92;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+      }
+      .tick {
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+      }
+      :focus-visible {
+        outline: 3px solid var(--tomato);
+        outline-offset: 2px;
+      }
+
+      /* ============================================================
+         SHELL
+         ============================================================ */
+      .shell {
+        display: flex;
+        height: 100dvh;
+      }
+      .rail {
+        display: none;
+        flex-direction: column;
+        width: 246px;
+        flex: 0 0 246px;
+        background: var(--paper-2);
+        border-right: var(--bw) solid var(--ink);
+      }
+      .rail-brand {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        padding: var(--s-4);
+        border-bottom: var(--bw) solid var(--ink);
+      }
+      .monogram {
+        width: 42px;
+        height: 42px;
+        background: var(--tomato);
+        color: var(--paper-2);
+        display: grid;
+        place-items: center;
+        font-size: var(--icon-md);
+        flex: none;
+      }
+      .rail-brand .name {
+        font-family: var(--font-display);
+        font-size: var(--fs-md);
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .rail-brand .sub {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin-top: 3px;
+      }
+      .rail-nav {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+      }
+      .rail-item {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        width: 100%;
+        padding: 14px var(--s-4);
+        border: 0;
+        border-bottom: var(--bw-2) solid var(--ink);
+        background: transparent;
+        color: var(--ink);
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+      }
+      .rail-item i {
+        font-size: var(--icon-md);
+        flex: none;
+      }
+      .rail-item .count {
+        margin-left: auto;
+      }
+      .rail-item[aria-current="page"] {
+        background: var(--tomato);
+        color: #fff;
+        box-shadow: inset 6px 0 0 var(--ink);
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .rail-item:not([aria-current="page"]):hover {
+          background: var(--paper);
+        }
+      }
+      .rail-foot {
+        padding: var(--s-4);
+        border-top: var(--bw) solid var(--ink);
+      }
+
+      .main-col {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--paper);
+      }
+
+      /* Market awning stripe */
+      .awning {
+        height: 15px;
+        border-bottom: var(--bw) solid var(--ink);
+        background: repeating-linear-gradient(135deg, var(--tomato) 0 14px, var(--paper-2) 14px 28px);
+      }
+      .ticker {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        padding: 8px var(--s-4);
+        background: var(--ink);
+        color: var(--paper-2);
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      .ticker .sep {
+        color: var(--mustard);
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        padding: var(--s-3) var(--s-4);
+        border-bottom: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+      }
+      .topbar .screen-title {
+        font-family: var(--font-display);
+        font-size: var(--fs-md);
+        text-transform: uppercase;
+      }
+      .topbar .spacer {
+        flex: 1;
+      }
+      .topbar .switches {
+        display: flex;
+        gap: var(--s-4);
+        align-items: center;
+      }
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--s-2);
+        cursor: pointer;
+        user-select: none;
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .toggle input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .toggle .box {
+        width: 28px;
+        height: 28px;
+        border: var(--bw-2) solid var(--ink);
+        background: var(--paper-2);
+        box-shadow: 3px 3px 0 var(--ink);
+        display: grid;
+        place-items: center;
+        flex: none;
+        transition: background-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+          transform var(--dur) var(--ease);
+      }
+      .toggle input:checked + .box {
+        background: var(--mustard);
+      }
+      .toggle input:checked + .box i {
+        font-size: 13px;
+      }
+      .toggle:active .box {
+        transform: translate(2px, 2px);
+        box-shadow: var(--sh-flat);
+      }
+      .toggle input:focus-visible + .box {
+        outline: 3px solid var(--tomato);
+        outline-offset: 2px;
+      }
+
+      /* ============================================================
+         STREAM
+         ============================================================ */
+      .stream {
+        flex: 1;
+        overflow-y: auto;
+        padding: var(--s-5);
+        display: flex;
+        flex-direction: column;
+        gap: var(--s-4);
+      }
+
+      /* --- Chalk special board (one dark object on a light page) --- */
+      .special {
+        border: var(--bw) solid var(--ink);
+        background: var(--ink);
+        color: var(--paper);
+        box-shadow: var(--sh-2);
+        padding: var(--s-5);
+        max-width: 640px;
+      }
+      .special .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--mustard);
+      }
+      .special h1 {
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        font-size: var(--fs-macro);
+        letter-spacing: -0.035em;
+        line-height: 0.92;
+        color: var(--paper-2);
+        margin-top: var(--s-2);
+      }
+      .special p {
+        color: rgba(246, 238, 221, 0.72);
+        font-size: var(--fs-sm);
+        margin-top: var(--s-3);
+        max-width: 48ch;
+      }
+      .special .row {
+        display: flex;
+        gap: var(--s-2);
+        flex-wrap: wrap;
+        margin-top: var(--s-4);
+        padding-top: var(--s-4);
+        border-top: var(--bw-2) solid rgba(246, 238, 221, 0.25);
+      }
+      .chalk-tag {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        border: var(--bw-2) solid rgba(246, 238, 221, 0.5);
+        color: var(--paper-2);
+        padding: 4px 8px;
+      }
+      .chalk-tag.hot {
+        border-color: var(--mustard);
+        color: var(--mustard);
+      }
+
+      /* --- Message --- */
+      .msg {
+        max-width: 64ch;
+        border: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+        box-shadow: var(--sh-1);
+        padding: var(--s-3) var(--s-4);
+      }
+      .msg .who {
+        display: flex;
+        align-items: center;
+        gap: var(--s-2);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+        margin-bottom: var(--s-2);
+      }
+      .msg .who .spacer {
+        flex: 1;
+      }
+      .msg .body {
+        font-size: var(--fs-sm);
+      }
+      .msg.user {
+        align-self: flex-end;
+        background: var(--tomato);
+        color: #fff;
+        border-color: var(--ink);
+      }
+      .msg.user .who {
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      /* --- Run trace --- */
+      .runlog {
+        border: var(--bw) solid var(--ink);
+        box-shadow: var(--sh-1);
+        max-width: 68ch;
+      }
+      .runlog-head {
+        display: flex;
+        align-items: center;
+        gap: var(--s-2);
+        padding: 8px var(--s-4);
+        background: var(--brown);
+        color: var(--paper-2);
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+      .runlog-head .spacer {
+        flex: 1;
+      }
+      .runlog-head .stamp {
+        color: var(--mustard);
+      }
+      .runlog-body {
+        background: var(--paper-2);
+      }
+      .runlog-row {
+        display: grid;
+        grid-template-columns: 92px 1fr;
+        gap: var(--s-3);
+        padding: 9px var(--s-4);
+        border-bottom: var(--bw-2) solid var(--ink);
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+      }
+      .runlog-row:last-child {
+        border-bottom: 0;
+      }
+      .runlog-row .agent {
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--brown);
+      }
+      .runlog-row .note {
+        color: var(--muted);
+      }
+
+      /* --- Warung menu list (the core layout) --- */
+      .menu {
+        border: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+        box-shadow: var(--sh-2);
+        max-width: 68ch;
+      }
+      .menu-head {
+        display: flex;
+        align-items: center;
+        gap: var(--s-2);
+        padding: 10px var(--s-4);
+        background: var(--ink);
+        color: var(--paper-2);
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        font-size: var(--fs-md);
+        letter-spacing: -0.01em;
+      }
+      .menu-head .spacer {
+        flex: 1;
+      }
+      .menu-head .n {
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        color: var(--mustard);
+        letter-spacing: 0.08em;
+      }
+      .menu-row {
+        display: grid;
+        grid-template-columns: 44px 1fr;
+        gap: var(--s-3);
+        padding: var(--s-4);
+        border-bottom: var(--bw-2) solid var(--ink);
+      }
+      .menu-row:last-child {
+        border-bottom: 0;
+      }
+      .menu-row .ico {
+        width: 44px;
+        height: 44px;
+        border: var(--bw-2) solid var(--ink);
+        background: var(--paper);
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+        flex: none;
+      }
+      .menu-row.is-out .ico {
+        background: var(--tomato);
+        color: #fff;
+      }
+      .menu-row.is-markdown .ico {
+        background: var(--mustard);
+      }
+      .menu-line {
+        display: flex;
+        align-items: baseline;
+        gap: var(--s-2);
+      }
+      .menu-line .name {
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        font-size: var(--fs-md);
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .menu-line .leader {
+        flex: 1;
+        border-bottom: 2px dotted var(--ink);
+        transform: translateY(-4px);
+        min-width: 16px;
+      }
+      .price {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: var(--fs-sm);
+        border: var(--bw-2) solid var(--ink);
+        padding: 3px 8px;
+        white-space: nowrap;
+        background: var(--paper-2);
+      }
+      .price.risk {
+        background: var(--tomato);
+        color: #fff;
+      }
+      .price.ok {
+        background: var(--avocado);
+        color: #fff;
+      }
+      .price.warn {
+        background: var(--mustard);
+      }
+      .menu-meta {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      .menu-stamps {
+        display: flex;
+        gap: var(--s-2);
+        flex-wrap: wrap;
+        margin-top: var(--s-3);
+      }
+      .stamp {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        border: var(--bw-2) solid var(--ink);
+        padding: 3px 7px;
+        background: var(--paper);
+      }
+      .stamp.out {
+        background: var(--tomato);
+        color: #fff;
+        transform: rotate(-2deg);
+      }
+      .stamp.warn {
+        background: var(--mustard);
+    }
+      .stamp.ok {
+        background: var(--avocado);
+        color: #fff;
+      }
+
+      /* --- Summary --- */
+      .summary {
+        border: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+        box-shadow: var(--sh-2);
+        max-width: 68ch;
+      }
+      .summary-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--bw);
+        background: var(--ink);
+      }
+      .summary-metrics .m {
+        background: var(--paper-2);
+        padding: var(--s-3) var(--s-4);
+      }
+      .summary-metrics .m .k {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+      .summary-metrics .m .v {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: var(--fs-lg);
+        margin-top: 4px;
+      }
+      .summary-foot {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        padding: var(--s-4);
+        flex-wrap: wrap;
+        border-top: var(--bw-2) solid var(--ink);
+      }
+      .summary-foot .note {
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+        flex: 1;
+        min-width: 150px;
+      }
+
+      /* --- Buttons --- */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--s-2);
+        padding: 11px 16px;
+        border: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+        color: var(--ink);
+        font-weight: 800;
+        font-size: var(--fs-sm);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        white-space: nowrap;
+        box-shadow: var(--sh-1);
+        transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+          background-color var(--dur) var(--ease);
+      }
+      .btn:active {
+        transform: translate(4px, 4px);
+        box-shadow: var(--sh-flat);
+      }
+      .btn i {
+        font-size: var(--icon-sm);
+      }
+      .btn-primary {
+        background: var(--tomato);
+        color: #fff;
+      }
+      .btn-block {
+        width: 100%;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .btn:hover {
+          transform: translate(-2px, -2px);
+          box-shadow: var(--sh-2);
+        }
+        .btn-primary:hover {
+          background: #c22f1d;
+        }
+      }
+
+      /* --- Suggestions --- */
+      .suggest {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--s-2);
+      }
+      .suggest button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border: var(--bw-2) solid var(--ink);
+        background: var(--paper-2);
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        box-shadow: 3px 3px 0 var(--ink);
+        transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+          background-color var(--dur) var(--ease);
+      }
+      .suggest button:active {
+        transform: translate(3px, 3px);
+        box-shadow: var(--sh-flat);
+      }
+      .suggest button i {
+        font-size: 13px;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .suggest button:hover {
+          transform: translate(-2px, -2px);
+          box-shadow: var(--sh-1);
+          background: var(--mustard);
+        }
+      }
+
+      /* --- Composer --- */
+      .composer {
+        border-top: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+        padding: var(--s-3) var(--s-4);
+        display: flex;
+        gap: var(--s-3);
+        align-items: center;
+      }
+      .composer input {
+        flex: 1;
+        min-width: 0;
+        padding: 12px 14px;
+        border: var(--bw-2) solid var(--ink);
+        background: var(--paper);
+        font-family: var(--font-mono);
+        font-size: var(--fs-sm);
+      }
+      .composer input::placeholder {
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .composer input:focus {
+        outline: none;
+        border-color: var(--tomato);
+        background: var(--paper-2);
+        box-shadow: var(--sh-1);
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .composer input:focus {
+          background: var(--paper);
+        }
+      }
+
+      /* --- Bottom nav --- */
+      .bottombar {
+        display: flex;
+        border-top: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+      }
+      .bottombar .rail-item {
+        flex: 1;
+        flex-direction: column;
+        gap: 4px;
+        padding: 10px 0;
+        border-bottom: 0;
+        border-right: var(--bw-2) solid var(--ink);
+        text-align: center;
+        font-size: 10px;
+      }
+      .bottombar .rail-item[aria-current="page"] {
+        box-shadow: inset 0 -5px 0 var(--ink);
+      }
+      .bottombar .rail-item:last-child {
+        border-right: 0;
+      }
+      @media (min-width: 900px) {
+        .rail {
+          display: flex;
+        }
+        .bottombar {
+          display: none;
+        }
+      }
+
+      /* --- Motion --- */
+      @media (prefers-reduced-motion: no-preference) {
+        .rise {
+          opacity: 1;
+          transform: translate(0, 0);
+          transition: opacity 220ms var(--ease), transform 220ms var(--ease);
+          transition-delay: var(--d, 0ms);
+        }
+        @starting-style {
+          .rise {
+            opacity: 0;
+            transform: translate(0, 10px);
+          }
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <!-- Rail -->
+      <aside class="rail" aria-label="Primary">
+        <div class="rail-brand">
+          <div class="monogram"><i class="ph ph-storefront"></i></div>
+          <div>
+            <div class="name">Warung Oreo</div>
+            <div class="sub">UPM · Canteen 01</div>
+          </div>
+        </div>
+        <nav class="rail-nav">
+          <button class="rail-item" aria-current="page"><i class="ph ph-chats"></i>Orders</button>
+          <button class="rail-item"><i class="ph ph-clipboard-text"></i>Plan<span class="count">04</span></button>
+          <button class="rail-item"><i class="ph ph-bowl-food"></i>Menu<span class="count">06</span></button>
+          <button class="rail-item"><i class="ph ph-crown-simple"></i>Pro</button>
+        </nav>
+        <div class="rail-foot">
+          <button class="btn btn-primary btn-block"><i class="ph ph-play"></i>Run agents</button>
+        </div>
+      </aside>
+
+      <div class="main-col">
+        <div class="awning" aria-hidden="true"></div>
+        <div class="ticker">
+          <span><i class="ph ph-storefront"></i> WARUNG OREO</span><span class="sep">///</span>
+          <span>CANTEEN 01 · UPM</span><span class="sep">///</span>
+          <span>MON 12 OCT</span><span class="sep">///</span>
+          <span>OPEN 07:00</span>
+        </div>
+
+        <div class="topbar">
+          <i class="ph ph-chats" style="font-size: var(--icon-md)"></i>
+          <span class="screen-title">Orders</span>
+          <span class="spacer"></span>
+          <div class="switches">
+            <label class="toggle"><input type="checkbox" /><span class="box"></span>Payday</label>
+            <label class="toggle"><input type="checkbox" /><span class="box"></span>Rain</label>
+          </div>
+        </div>
+
+        <div class="stream">
+          <!-- Chalk special board -->
+          <div class="special rise" style="--d: 0ms">
+            <div class="eyebrow">Today's special · Mon 12 Oct</div>
+            <h1>Kak, teh tarik habis.</h1>
+            <p>Teh tarik sold out before the morning rush. Order 40 more, mark down the tuna sandwich, and skip the rest.</p>
+            <div class="row">
+              <span class="chalk-tag hot"><i class="ph ph-warning"></i> 3 sold out</span>
+              <span class="chalk-tag"><i class="ph ph-tag"></i> 1 markdown</span>
+              <span class="chalk-tag"><i class="ph ph-coins"></i> RM 152.16 impact</span>
+            </div>
+          </div>
+
+          <div class="msg rise" style="--d: 40ms">
+            <div class="who"><i class="ph ph-storefront"></i>Warung<span class="spacer"></span>05:40</div>
+            <div class="body">Pagi kak. Tell me what you need for tomorrow — or tap a suggestion below.</div>
+          </div>
+
+          <div class="msg user rise" style="--d: 80ms">
+            <div class="who"><i class="ph ph-user"></i>You<span class="spacer"></span>05:41</div>
+            <div class="body">Prepare the plan.</div>
+          </div>
+
+          <div class="runlog rise" style="--d: 120ms">
+            <div class="runlog-head"><i class="ph ph-cpu"></i>Run trace<span class="spacer"></span><span class="stamp">4 agents · validated</span></div>
+            <div class="runlog-body">
+              <div class="runlog-row"><span class="agent">Planner</span><span class="note">Goal received. Context: payday off, rain off.</span></div>
+              <div class="runlog-row"><span class="agent">Demand</span><span class="note">Forecast 6 dishes from same-weekday sales.</span></div>
+              <div class="runlog-row"><span class="agent">Expiry</span><span class="note">Sandwich tuna flagged for 30% markdown.</span></div>
+              <div class="runlog-row"><span class="agent">Validator</span><span class="note">Plan approved. Order sheet ready.</span></div>
+            </div>
+          </div>
+
+          <div class="msg rise" style="--d: 160ms">
+            <div class="who"><i class="ph ph-storefront"></i>Warung<span class="spacer"></span>05:41</div>
+            <div class="body">Plan siap. 4 things need your attention today — RM 152.16 total impact.</div>
+          </div>
+
+          <div class="summary rise" style="--d: 200ms">
+            <div class="menu-head"><i class="ph ph-clipboard-text"></i>Plan summary<span class="spacer"></span><span class="n">05:41</span></div>
+            <div class="summary-metrics">
+              <div class="m"><div class="k">Actions</div><div class="v">04</div></div>
+              <div class="m"><div class="k">Restock</div><div class="v">03</div></div>
+              <div class="m"><div class="k">Markdown</div><div class="v">01</div></div>
+            </div>
+            <div class="summary-foot">
+              <span class="note">Backtest saves 62% vs the same-day-last-week baseline.</span>
+              <button class="btn btn-primary"><i class="ph ph-clipboard-text"></i>View order sheet</button>
+            </div>
+          </div>
+
+          <!-- Warung menu list -->
+          <div class="menu rise" style="--d: 240ms">
+            <div class="menu-head"><i class="ph ph-bowl-food"></i>Menu today<span class="spacer"></span><span class="n">06 DISHES</span></div>
+
+            <div class="menu-row is-out">
+              <div class="ico"><i class="ph ph-coffee"></i></div>
+              <div>
+                <div class="menu-line"><span class="name">Teh tarik</span><span class="leader"></span><span class="price risk">RM 2.50</span></div>
+                <div class="menu-meta">DRK-02 · Beverage Supply Co.</div>
+                <div class="menu-stamps"><span class="stamp out"><i class="ph ph-warning"></i> Sold out</span><span class="stamp">Order 40</span><span class="stamp warn">RM 79.20 at risk</span></div>
+              </div>
+            </div>
+
+            <div class="menu-row is-out">
+              <div class="ico"><i class="ph ph-cookie"></i></div>
+              <div>
+                <div class="menu-line"><span class="name">Karipap</span><span class="leader"></span><span class="price risk">RM 1.00</span></div>
+                <div class="menu-meta">SNK-04 · Snack Distributors</div>
+                <div class="menu-stamps"><span class="stamp out"><i class="ph ph-warning"></i> Sold out</span><span class="stamp">Order 50</span><span class="stamp warn">RM 24.00 at risk</span></div>
+              </div>
+            </div>
+
+            <div class="menu-row is-out">
+              <div class="ico"><i class="ph ph-cake"></i></div>
+              <div>
+                <div class="menu-line"><span class="name">Kuih lapis</span><span class="leader"></span><span class="price risk">RM 1.50</span></div>
+                <div class="menu-meta">SNK-06 · Kuih Express</div>
+                <div class="menu-stamps"><span class="stamp out"><i class="ph ph-warning"></i> Sold out</span><span class="stamp">Order 30</span><span class="stamp warn">RM 28.80 at risk</span></div>
+              </div>
+            </div>
+
+            <div class="menu-row is-markdown">
+              <div class="ico"><i class="ph ph-bread"></i></div>
+              <div>
+                <div class="menu-line"><span class="name">Sandwich tuna</span><span class="leader"></span><span class="price warn">RM 2.80</span></div>
+                <div class="menu-meta">MEL-05 · FreshBites Supply · was RM 4.00</div>
+                <div class="menu-stamps"><span class="stamp warn"><i class="ph ph-tag"></i> Markdown 30%</span><span class="stamp">Expires 18:00</span><span class="stamp ok">RM 20.16 recovered</span></div>
+              </div>
+            </div>
+
+            <div class="menu-row">
+              <div class="ico"><i class="ph ph-bowl-food"></i></div>
+              <div>
+                <div class="menu-line"><span class="name">Nasi lemak</span><span class="leader"></span><span class="price">RM 3.00</span></div>
+                <div class="menu-meta">MEL-01 · Makcik Kitchen · 44 on shelf</div>
+                <div class="menu-stamps"><span class="stamp ok"><i class="ph ph-check"></i> Healthy</span><span class="stamp">Margin RM 1.20</span></div>
+              </div>
+            </div>
+
+            <div class="menu-row">
+              <div class="ico"><i class="ph ph-bowl-food"></i></div>
+              <div>
+                <div class="menu-line"><span class="name">Mee goreng</span><span class="leader"></span><span class="price">RM 4.50</span></div>
+                <div class="menu-meta">MEL-03 · Makcik Kitchen · 21 on shelf</div>
+                <div class="menu-stamps"><span class="stamp ok"><i class="ph ph-check"></i> Healthy</span><span class="stamp">Margin RM 2.50</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="suggest rise" style="--d: 280ms">
+            <button><i class="ph ph-play"></i>Prepare the plan</button>
+            <button><i class="ph ph-warning"></i>What's sold out?</button>
+            <button><i class="ph ph-tag"></i>Show markdowns</button>
+            <button><i class="ph ph-coins"></i>Savings vs baseline</button>
+          </div>
+        </div>
+
+        <div class="composer">
+          <input type="text" placeholder="Ask the warung" />
+          <button class="btn btn-primary"><i class="ph ph-paper-plane-tilt"></i>Send</button>
+        </div>
+
+        <nav class="bottombar" aria-label="Primary">
+          <button class="rail-item" aria-current="page"><i class="ph ph-chats"></i>Orders</button>
+          <button class="rail-item"><i class="ph ph-clipboard-text"></i>Plan</button>
+          <button class="rail-item"><i class="ph ph-bowl-food"></i>Menu</button>
+          <button class="rail-item"><i class="ph ph-crown-simple"></i>Pro</button>
+        </nav>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,107 +1,97 @@
-import { motion } from "framer-motion";
 import { SAMPLE_ITEMS } from "../lib/sample-data";
-import { InventoryIcon, PinIcon, UploadIcon } from "./icons";
 
 const SUPPLIERS: Record<string, string> = {
   "nasi-lemak": "Makcik Kitchen Sdn Bhd",
   "teh-tarik": "Beverage Supply Co.",
   "mee-goreng": "Makcik Kitchen Sdn Bhd",
-  "karipap": "Snack Distributors",
+  karipap: "Snack Distributors",
   "sandwich-tuna": "FreshBites Supply",
   "kuih-lapis": "Kuih Express",
 };
 
+const ICONS: Record<string, string> = {
+  "nasi-lemak": "ph-bowl-food",
+  "teh-tarik": "ph-coffee",
+  "mee-goreng": "ph-bowl-food",
+  karipap: "ph-cookie",
+  "sandwich-tuna": "ph-bread",
+  "kuih-lapis": "ph-cake",
+};
+
+const CODES: Record<string, string> = {
+  "nasi-lemak": "MEL-01",
+  "teh-tarik": "DRK-02",
+  "mee-goreng": "MEL-03",
+  karipap: "SNK-04",
+  "sandwich-tuna": "MEL-05",
+  "kuih-lapis": "SNK-06",
+};
+
 export default function InventoryTab() {
   return (
-    <div className="space-y-4">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="surface-elevated p-4 sm:p-5"
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-sky-100 flex items-center justify-center shrink-0">
-              <PinIcon className="w-5 h-5 text-cream-100" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-cream-100">Oreo · UPM</p>
-              <p className="text-xs text-cream-300/70">Store PIN: DEMO-UPM-001 · Sample data loaded</p>
-            </div>
+    <div className="scroll-area min-h-0 flex-1 overflow-y-auto p-5">
+      <div className="flex flex-col gap-4">
+        <div className="special rise">
+          <div className="font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] text-gold-500">
+            Menu · {SAMPLE_ITEMS.length} dishes · Mon 12 Oct
           </div>
-          <div className="flex items-center gap-2 text-xs text-cream-300/70">
-            <UploadIcon className="w-4 h-4" />
-            <span>In production: upload CSV via PIN portal</span>
-          </div>
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="surface-elevated p-6 shine-border"
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center shadow-lift">
-            <InventoryIcon className="w-5 h-5 text-white" />
-          </div>
-          <h2 className="text-cream-100 text-xl font-bold">Current stock</h2>
+          <h1 className="macro mt-2 text-[clamp(30px,6vw,52px)]">Today's menu</h1>
+          <p className="mt-3 max-w-[52ch] text-[13px]">
+            Everything on the shelf right now — stock on hand, price, cost and margin per dish.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {SAMPLE_ITEMS.map((item, i) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 16, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: i * 0.05, duration: 0.4, ease: [0.175, 0.885, 0.32, 1.275] }}
-              whileHover={{ y: -6, scale: 1.02 }}
-              className="surface-card p-4 pop-card cursor-default"
-            >
-              <div className="flex items-start justify-between mb-2">
+        <div className="rise grid grid-cols-1 gap-[3px] border-[3px] border-cream-100 bg-cream-100 shadow-pop min-[640px]:grid-cols-2 min-[1040px]:grid-cols-3">
+          {SAMPLE_ITEMS.map((item) => {
+            const isOut = item.stock === 0;
+            const isMarkdown = !!item.expiry;
+            const price = item.expiry ? item.price * (1 - item.expiry.discount) : item.price;
+            return (
+              <article key={item.id} className="dish">
+                <div className="hd">
+                  <span className="code">
+                    <i className={`ph ${ICONS[item.id] ?? "ph-bowl-food"}`} />
+                    {CODES[item.id]}
+                  </span>
+                  {isOut ? (
+                    <span className="stamp out">
+                      <i className="ph ph-warning" /> Sold out
+                    </span>
+                  ) : isMarkdown ? (
+                    <span className="stamp warn">
+                      <i className="ph ph-tag" /> Markdown
+                    </span>
+                  ) : (
+                    <span className="stamp ok">
+                      <i className="ph ph-check" /> Healthy
+                    </span>
+                  )}
+                </div>
                 <div>
-                  <h3 className="text-cream-100 font-semibold">{item.name}</h3>
-                  <p className="text-xs text-cream-300/50">{SUPPLIERS[item.id]}</p>
+                  <div className="nm">{item.name}</div>
+                  <div className="sup">{SUPPLIERS[item.id]}</div>
                 </div>
-                <span className={`badge ${
-                  item.category === "main" ? "badge-ok" :
-                  item.category === "drink" ? "badge-stockout" : "badge-expiry"
-                }`}>
-                  {item.category}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 mt-3">
-                <div className="bg-forest-700/40 rounded-xl p-2 text-center">
-                  <p className="text-[10px] text-cream-300/60 uppercase font-bold">Stock</p>
-                  <p className="text-lg font-bold text-cream-100">{item.stock}</p>
+                <div className={`qty ${isOut ? "out" : ""}`}>
+                  <span className="n">{String(item.stock).padStart(2, "0")}</span>
+                  <span className="u">on shelf</span>
                 </div>
-                <div className="bg-forest-700/40 rounded-xl p-2 text-center">
-                  <p className="text-[10px] text-cream-300/60 uppercase font-bold">Price</p>
-                  <p className="text-sm font-semibold text-cream-200">RM{item.price.toFixed(2)}</p>
-                </div>
-                <div className="bg-forest-700/40 rounded-xl p-2 text-center">
-                  <p className="text-[10px] text-cream-300/60 uppercase font-bold">Cost</p>
-                  <p className="text-sm font-semibold text-cream-300/70">RM{item.cost.toFixed(2)}</p>
-                </div>
-              </div>
-
-              <div className="mt-3 pt-3 border-t border-sage-400/10 flex items-center justify-between text-xs">
-                <span className="text-cream-300/50">Limit: {item.supplierLimit} units</span>
-                <span className="text-gold-600 font-bold">Margin RM{(item.price - item.cost).toFixed(2)}</span>
-              </div>
-
-              {item.expiry && (
-                <div className="mt-2">
-                  <span className="badge badge-expiry animate-pulse-soft">
-                    Expires {item.expiry.date.slice(5)}{item.expiry.hour ? ` ${item.expiry.hour}:00` : ""}
+                <div className="ft">
+                  <span className={`price ${isMarkdown ? "warn" : ""}`}>RM {price.toFixed(2)}</span>
+                  <span className="lbl">
+                    {isOut ? `Order ${item.supplierLimit} in plan` : `Margin RM ${(item.price - item.cost).toFixed(2)}`}
                   </span>
                 </div>
-              )}
-            </motion.div>
-          ))}
+                {item.expiry && (
+                  <div className="font-mono text-[10px] uppercase tracking-[0.06em] text-cream-300">
+                    Expires {item.expiry.date.slice(5)}
+                    {item.expiry.hour ? ` ${item.expiry.hour}:00` : ""}
+                  </div>
+                )}
+              </article>
+            );
+          })}
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

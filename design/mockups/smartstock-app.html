@@ -1,0 +1,1919 @@
+<!doctype html>
+<!--
+  SmartStock / WARUNG OREO — full app, warm stall direction.
+  Screens: Orders (chat) · Plan (order sheet) · Menu (stock) · Pro (upgrade).
+  Neo-brutalist structure (0 radius, hard shadows, thick borders) + warm food palette
+  + market-stall motifs (awning, chalk board, price stamps, till receipt, menu list).
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Warung Oreo — SmartStock</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+    <style>
+      :root {
+        --paper: #f6eedd;
+        --paper-2: #fffbf2;
+        --ink: #17110b;
+        --tomato: #dc3a26;
+        --mustard: #f0b429;
+        --avocado: #4f9d3a;
+        --brown: #8a5a2b;
+        --muted: #6b5a4a;
+
+        --bw: 3px;
+        --bw-2: 2px;
+        --sh-1: 4px 4px 0 var(--ink);
+        --sh-2: 6px 6px 0 var(--ink);
+        --sh-3: 8px 8px 0 var(--ink);
+        --sh-flat: 0 0 0 var(--ink);
+
+        --s-1: 4px;
+        --s-2: 8px;
+        --s-3: 12px;
+        --s-4: 16px;
+        --s-5: 20px;
+        --s-6: 24px;
+
+        --font-display: "Archivo Black", "Archivo", system-ui, sans-serif;
+        --font-ui: "Archivo", system-ui, sans-serif;
+        --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+        --fs-xs: 11px;
+        --fs-sm: 13px;
+        --fs-base: 15px;
+        --fs-md: 17px;
+        --fs-lg: 22px;
+        --fs-macro: clamp(30px, 6vw, 52px);
+
+        /* Motion: strong ease-OUT for UI. The previous curve (0.2,0,0,1) starts flat,
+           which reads as sluggish — the skill bans ease-in for interface motion. */
+        --ease: cubic-bezier(0.23, 1, 0.32, 1);
+        --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+        --dur: 120ms;
+        --dur-enter: 220ms;
+        --icon-md: 19px;
+        --icon-sm: 15px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        color: var(--ink);
+        font-family: var(--font-ui);
+        font-size: var(--fs-base);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        background-color: var(--paper);
+        background-image: radial-gradient(rgba(23, 17, 11, 0.055) 1px, transparent 1.2px);
+        background-size: 18px 18px;
+        overflow: hidden;
+      }
+      h1,
+      h2,
+      h3,
+      p,
+      ul {
+        margin: 0;
+      }
+      ul {
+        padding: 0;
+        list-style: none;
+      }
+      button,
+      input {
+        font: inherit;
+      }
+      i[class^="ph"] {
+        display: inline-block;
+        line-height: 1;
+      }
+
+      .macro {
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        letter-spacing: -0.035em;
+        line-height: 0.92;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+      }
+      .tick {
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+      }
+      :focus-visible {
+        outline: 3px solid var(--tomato);
+        outline-offset: 2px;
+      }
+
+      ::selection {
+        background: var(--mustard);
+        color: var(--ink);
+      }
+
+      /* Scrollbars kept on-theme (not the browser default) */
+      .scroll {
+        scrollbar-width: thin;
+        scrollbar-color: var(--ink) var(--paper);
+      }
+      .scroll::-webkit-scrollbar {
+        width: 10px;
+      }
+      .scroll::-webkit-scrollbar-track {
+        background: var(--paper);
+      }
+      .scroll::-webkit-scrollbar-thumb {
+        background: var(--ink);
+        border: 2px solid var(--paper);
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ---------- Shell ---------- */
+      .shell {
+        display: flex;
+        height: 100dvh;
+      }
+      .rail {
+        display: none;
+        flex-direction: column;
+        width: 246px;
+        flex: 0 0 246px;
+        background: var(--paper-2);
+        border-right: var(--bw) solid var(--ink);
+      }
+      .rail-brand {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        padding: var(--s-4);
+        border-bottom: var(--bw) solid var(--ink);
+      }
+      .monogram {
+        width: 42px;
+        height: 42px;
+        background: var(--tomato);
+        color: var(--paper-2);
+        display: grid;
+        place-items: center;
+        font-size: var(--icon-md);
+        flex: none;
+      }
+      .rail-brand .name {
+        font-family: var(--font-display);
+        font-size: var(--fs-md);
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .rail-brand .sub {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin-top: 3px;
+      }
+      .rail-nav {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+      }
+      .rail-item {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        width: 100%;
+        padding: 14px var(--s-4);
+        border: 0;
+        border-bottom: var(--bw-2) solid var(--ink);
+        background: transparent;
+        color: var(--ink);
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease),
+          transform var(--dur) var(--ease);
+      }
+      .rail-item:active {
+        transform: translateY(1px);
+      }
+      .rail-item i {
+        font-size: var(--icon-md);
+        flex: none;
+      }
+      .rail-item .count {
+        margin-left: auto;
+      }
+      .rail-item[aria-current="page"] {
+        background: var(--tomato);
+        color: #fff;
+        box-shadow: inset 6px 0 0 var(--ink);
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .rail-item:not([aria-current="page"]):hover {
+          background: var(--paper);
+        }
+      }
+      .rail-foot {
+        padding: var(--s-4);
+        border-top: var(--bw) solid var(--ink);
+      }
+
+      .main-col {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--paper);
+      }
+      .awning {
+        height: 15px;
+        border-bottom: var(--bw) solid var(--ink);
+        background: repeating-linear-gradient(135deg, var(--tomato) 0 14px, var(--paper-2) 14px 28px);
+      }
+      .ticker {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        padding: 8px var(--s-4);
+        background: var(--ink);
+        color: var(--paper-2);
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      .ticker .sep {
+        color: var(--mustard);
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        padding: var(--s-3) var(--s-4);
+        border-bottom: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+      }
+      .topbar .screen-title {
+        font-family: var(--font-display);
+        font-size: var(--fs-md);
+        text-transform: uppercase;
+      }
+      .topbar .spacer {
+        flex: 1;
+      }
+      .topbar .switches {
+        display: flex;
+        gap: var(--s-4);
+        align-items: center;
+      }
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--s-2);
+        cursor: pointer;
+        user-select: none;
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .toggle input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .toggle .box {
+        width: 28px;
+        height: 28px;
+        border: var(--bw-2) solid var(--ink);
+        background: var(--paper-2);
+        box-shadow: 3px 3px 0 var(--ink);
+        display: grid;
+        place-items: center;
+        flex: none;
+        transition: background-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+          transform var(--dur) var(--ease);
+      }
+      .toggle input:checked + .box {
+        background: var(--mustard);
+      }
+      .toggle input:checked + .box i {
+        font-size: 13px;
+      }
+      .toggle:active .box {
+        transform: translate(2px, 2px);
+        box-shadow: var(--sh-flat);
+      }
+      .toggle input:focus-visible + .box {
+        outline: 3px solid var(--tomato);
+        outline-offset: 2px;
+      }
+
+      /* ---------- Screens ---------- */
+      .screens {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .screen {
+        flex: 1;
+        min-height: 0;
+        display: none;
+        flex-direction: column;
+      }
+      .screen.active {
+        display: flex;
+      }
+      .scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding: var(--s-5);
+        display: flex;
+        flex-direction: column;
+        gap: var(--s-4);
+      }
+
+      /* ---------- Shared blocks ---------- */
+      .special {
+        border: var(--bw) solid var(--ink);
+        background: var(--ink);
+        color: var(--paper);
+        box-shadow: var(--sh-2);
+        padding: var(--s-5);
+      }
+      .special .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--mustard);
+      }
+      .special h1 {
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        font-size: var(--fs-macro);
+        letter-spacing: -0.035em;
+        line-height: 0.92;
+        color: var(--paper-2);
+        margin-top: var(--s-2);
+      }
+      .special p {
+        color: rgba(246, 238, 221, 0.72);
+        font-size: var(--fs-sm);
+        margin-top: var(--s-3);
+        max-width: 52ch;
+      }
+      .special .row {
+        display: flex;
+        gap: var(--s-2);
+        flex-wrap: wrap;
+        margin-top: var(--s-4);
+        padding-top: var(--s-4);
+        border-top: var(--bw-2) solid rgba(246, 238, 221, 0.25);
+      }
+      .chalk-tag {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        border: var(--bw-2) solid rgba(246, 238, 221, 0.5);
+        color: var(--paper-2);
+        padding: 4px 8px;
+      }
+      .chalk-tag.hot {
+        border-color: var(--mustard);
+        color: var(--mustard);
+      }
+
+      .msg {
+        max-width: 64ch;
+        border: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+        box-shadow: var(--sh-1);
+        padding: var(--s-3) var(--s-4);
+      }
+      .msg .who {
+        display: flex;
+        align-items: center;
+        gap: var(--s-2);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+        margin-bottom: var(--s-2);
+      }
+      .msg .who .spacer {
+        flex: 1;
+      }
+      .msg .body {
+        font-size: var(--fs-sm);
+      }
+      .msg.user {
+        align-self: flex-end;
+        background: var(--tomato);
+        color: #fff;
+      }
+      .msg.user .who {
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .runlog {
+        border: var(--bw) solid var(--ink);
+        box-shadow: var(--sh-1);
+        max-width: 68ch;
+      }
+      .runlog-head {
+        display: flex;
+        align-items: center;
+        gap: var(--s-2);
+        padding: 8px var(--s-4);
+        background: var(--brown);
+        color: var(--paper-2);
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+      .runlog-head .spacer {
+        flex: 1;
+      }
+      .runlog-head .stamp {
+        color: var(--mustard);
+      }
+      .runlog-body {
+        background: var(--paper-2);
+      }
+      .runlog-row {
+        display: grid;
+        grid-template-columns: 92px 1fr;
+        gap: var(--s-3);
+        padding: 9px var(--s-4);
+        border-bottom: var(--bw-2) solid var(--ink);
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+      }
+      .runlog-row:last-child {
+        border-bottom: 0;
+      }
+      .runlog-row .agent {
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--brown);
+      }
+      .runlog-row .note {
+        color: var(--muted);
+      }
+
+      .panel {
+        border: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+        box-shadow: var(--sh-2);
+      }
+      .panel-head {
+        display: flex;
+        align-items: center;
+        gap: var(--s-2);
+        padding: 10px var(--s-4);
+        background: var(--ink);
+        color: var(--paper-2);
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        font-size: var(--fs-md);
+        letter-spacing: -0.01em;
+      }
+      .panel-head .spacer {
+        flex: 1;
+      }
+      .panel-head .n {
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        color: var(--mustard);
+        letter-spacing: 0.08em;
+      }
+      .panel-body {
+        padding: var(--s-4);
+      }
+
+      /* ---------- Menu list ---------- */
+      .menu-row {
+        display: grid;
+        grid-template-columns: 44px 1fr;
+        gap: var(--s-3);
+        padding: var(--s-4);
+        border-bottom: var(--bw-2) solid var(--ink);
+      }
+      .menu-row:last-child {
+        border-bottom: 0;
+      }
+      .menu-row .ico {
+        width: 44px;
+        height: 44px;
+        border: var(--bw-2) solid var(--ink);
+        background: var(--paper);
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+        flex: none;
+      }
+      .menu-row.is-out .ico {
+        background: var(--tomato);
+        color: #fff;
+      }
+      .menu-row.is-markdown .ico {
+        background: var(--mustard);
+      }
+      .menu-line {
+        display: flex;
+        align-items: baseline;
+        gap: var(--s-2);
+      }
+      .menu-line .name {
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        font-size: var(--fs-md);
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .menu-line .leader {
+        flex: 1;
+        border-bottom: 2px dotted var(--ink);
+        transform: translateY(-4px);
+        min-width: 16px;
+      }
+      .price {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: var(--fs-sm);
+        border: var(--bw-2) solid var(--ink);
+        padding: 3px 8px;
+        white-space: nowrap;
+        background: var(--paper-2);
+      }
+      .price.risk {
+        background: var(--tomato);
+        color: #fff;
+      }
+      .price.ok {
+        background: var(--avocado);
+        color: #fff;
+      }
+      .price.warn {
+        background: var(--mustard);
+      }
+      .menu-meta {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      .menu-stamps {
+        display: flex;
+        gap: var(--s-2);
+        flex-wrap: wrap;
+        margin-top: var(--s-3);
+      }
+      .stamp {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        border: var(--bw-2) solid var(--ink);
+        padding: 3px 7px;
+        background: var(--paper);
+      }
+      .stamp.out {
+        background: var(--tomato);
+        color: #fff;
+        transform: rotate(-2deg);
+      }
+      .stamp.warn {
+        background: var(--mustard);
+      }
+      .stamp.ok {
+        background: var(--avocado);
+        color: #fff;
+      }
+
+      /* ---------- Metrics ---------- */
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--bw);
+        background: var(--ink);
+        border: var(--bw) solid var(--ink);
+        box-shadow: var(--sh-2);
+      }
+      @media (min-width: 720px) {
+        .metrics {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+      .metrics .m {
+        background: var(--paper-2);
+        padding: var(--s-3) var(--s-4);
+      }
+      .metrics .m .k {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+      .metrics .m .v {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: var(--fs-lg);
+        margin-top: 4px;
+      }
+      .metrics .m .v.hot {
+        color: var(--tomato);
+      }
+      .metrics .m .v.good {
+        color: var(--avocado);
+      }
+
+      /* ---------- Order sheet rows ---------- */
+      .rank-row {
+        display: grid;
+        grid-template-columns: 42px 1fr auto;
+        gap: var(--s-3);
+        align-items: start;
+        padding: var(--s-4);
+        border-bottom: var(--bw-2) solid var(--ink);
+      }
+      .rank-row:last-child {
+        border-bottom: 0;
+      }
+      .rank-row .rank {
+        width: 42px;
+        height: 42px;
+        border: var(--bw-2) solid var(--ink);
+        background: var(--ink);
+        color: var(--mustard);
+        font-family: var(--font-display);
+        font-size: var(--fs-md);
+        display: grid;
+        place-items: center;
+      }
+      .rank-row .t {
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        font-size: var(--fs-md);
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .rank-row .a {
+        font-size: var(--fs-sm);
+        font-weight: 600;
+        margin-top: 5px;
+      }
+      .rank-row .why {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+        margin-top: 6px;
+        max-width: 62ch;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .rank-row:hover,
+        .menu-row:hover {
+          background: var(--paper);
+        }
+      }
+      .why-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 10px;
+        padding: 5px 9px;
+        border: var(--bw-2) solid var(--ink);
+        background: var(--paper);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--ink);
+        cursor: pointer;
+        transition: background-color var(--dur) var(--ease);
+      }
+      .why-toggle i {
+        font-size: 12px;
+        transition: transform 200ms var(--ease);
+      }
+      .rank-row.open .why-toggle {
+        background: var(--mustard);
+      }
+      .rank-row.open .why-toggle i {
+        transform: rotate(180deg);
+      }
+      .why-body {
+        display: none;
+        margin-top: 10px;
+      }
+      .rank-row.open .why-body {
+        display: block;
+      }
+      .why-note {
+        font-size: var(--fs-sm);
+        background: var(--paper);
+        border: var(--bw-2) solid var(--ink);
+        padding: 10px 12px;
+        margin-bottom: 10px;
+      }
+      .fc {
+        border: var(--bw-2) solid var(--ink);
+        background: var(--paper-2);
+        padding: 12px;
+        max-width: 460px;
+      }
+      .fc .hd {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+      .pb .fill.brown {
+        background: var(--brown);
+      }
+
+      /* ---------- Markdown signs ---------- */
+      .signs {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--s-4);
+      }
+      @media (min-width: 700px) {
+        .signs {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      .sign {
+        border: var(--bw) solid var(--ink);
+        background: var(--mustard);
+        box-shadow: var(--sh-2);
+        padding: var(--s-5);
+        text-align: center;
+        transform: rotate(-1deg);
+      }
+      .sign .dish {
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        font-size: var(--fs-lg);
+        letter-spacing: -0.02em;
+      }
+      .sign .off {
+        font-family: var(--font-display);
+        font-size: var(--fs-macro);
+        letter-spacing: -0.04em;
+        line-height: 1;
+        margin-top: var(--s-2);
+      }
+      .sign .was {
+        font-family: var(--font-mono);
+        font-size: var(--fs-sm);
+        margin-top: var(--s-3);
+      }
+      .sign .was s {
+        color: rgba(23, 17, 11, 0.55);
+      }
+
+      /* ---------- Receipt ---------- */
+      .receipt {
+        background: var(--paper-2);
+        border: var(--bw) solid var(--ink);
+        box-shadow: var(--sh-2);
+        padding: var(--s-4);
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        max-width: 380px;
+      }
+      .receipt .rhead {
+        text-align: center;
+        padding-bottom: 8px;
+        border-bottom: var(--bw-2) solid var(--ink);
+        margin-bottom: 8px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+      }
+      .receipt .rsub {
+        text-align: center;
+        color: var(--muted);
+        font-size: 10px;
+        margin-bottom: 8px;
+      }
+      .rline {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        padding: 3px 0;
+      }
+      .rline .dots {
+        flex: 1;
+        border-bottom: 2px dotted var(--ink);
+        transform: translateY(-3px);
+      }
+      .rtotal {
+        display: flex;
+        justify-content: space-between;
+        border-top: var(--bw-2) solid var(--ink);
+        margin-top: 8px;
+        padding-top: 8px;
+        font-weight: 700;
+        font-size: var(--fs-sm);
+      }
+      .receipt .supplier {
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: var(--bw-2) dashed var(--ink);
+        font-weight: 700;
+      }
+
+      /* ---------- Proof bars ---------- */
+      .proof-item {
+        padding: var(--s-3) 0;
+        border-bottom: var(--bw-2) solid var(--ink);
+      }
+      .proof-item:last-child {
+        border-bottom: 0;
+      }
+      .proof-item .nm {
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 8px;
+      }
+      .pb {
+        display: grid;
+        grid-template-columns: 62px 1fr 54px;
+        align-items: center;
+        gap: var(--s-3);
+        margin-bottom: 6px;
+      }
+      .pb .lb {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+      }
+      .pb .track {
+        height: 18px;
+        border: var(--bw-2) solid var(--ink);
+        background: var(--paper);
+      }
+      .pb .fill {
+        height: 100%;
+        background: var(--tomato);
+      }
+      .pb .fill.good {
+        background: var(--avocado);
+      }
+      .pb .val {
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        text-align: right;
+      }
+
+      /* ---------- Dish grid (Menu screen) ---------- */
+      .dish-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--bw);
+        background: var(--ink);
+        border: var(--bw) solid var(--ink);
+        box-shadow: var(--sh-2);
+      }
+      @media (min-width: 640px) {
+        .dish-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (min-width: 1040px) {
+        .dish-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      .dish {
+        background: var(--paper-2);
+        padding: var(--s-4);
+        display: flex;
+        flex-direction: column;
+        gap: var(--s-3);
+        min-height: 190px;
+      }
+      .dish-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: var(--s-2);
+      }
+      .dish-code {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+      .dish-code i {
+        font-size: var(--icon-md);
+        color: var(--ink);
+      }
+      .dish-name {
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        font-size: var(--fs-md);
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+      }
+      .dish-sup {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+      }
+      .dish-qty {
+        display: flex;
+        align-items: baseline;
+        gap: var(--s-2);
+        margin-top: auto;
+      }
+      .dish-qty .n {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 40px;
+        line-height: 0.9;
+        letter-spacing: -0.03em;
+      }
+      .dish-qty.out .n {
+        color: var(--tomato);
+      }
+      .dish-qty .u {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+      .dish-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--s-2);
+        border-top: var(--bw-2) solid var(--ink);
+        padding-top: var(--s-3);
+      }
+      .dish-foot .lbl {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+      }
+
+      /* ---------- Pricing (Pro screen) ---------- */
+      .plans {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--s-5);
+      }
+      @media (min-width: 820px) {
+        .plans {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      .plan {
+        border: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+        box-shadow: var(--sh-2);
+        padding: var(--s-5);
+        display: flex;
+        flex-direction: column;
+      }
+      .plan.hot {
+        background: var(--mustard);
+        box-shadow: var(--sh-3);
+      }
+      .plan .tagline {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        border: var(--bw-2) solid var(--ink);
+        background: var(--ink);
+        color: var(--paper-2);
+        padding: 3px 8px;
+        align-self: flex-start;
+        margin-bottom: var(--s-3);
+      }
+      .plan.hot .tagline {
+        background: var(--tomato);
+      }
+      .plan h3 {
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        font-size: var(--fs-lg);
+        letter-spacing: -0.02em;
+      }
+      .plan .desc {
+        font-size: var(--fs-sm);
+        color: var(--muted);
+        margin-top: 6px;
+        min-height: 38px;
+      }
+      .plan .amount {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        margin: var(--s-4) 0;
+        font-family: var(--font-mono);
+      }
+      .plan .amount .cur {
+        font-size: var(--fs-sm);
+        font-weight: 700;
+      }
+      .plan .amount .big {
+        font-size: 40px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1;
+      }
+      .plan .amount .per {
+        font-size: var(--fs-xs);
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .plan ul {
+        display: grid;
+        gap: 10px;
+        margin-bottom: var(--s-5);
+      }
+      .plan li {
+        display: flex;
+        gap: 10px;
+        font-size: var(--fs-sm);
+        align-items: flex-start;
+      }
+      .plan li i {
+        font-size: 16px;
+        color: var(--avocado);
+        flex: none;
+        margin-top: 1px;
+      }
+      .plan .btn {
+        margin-top: auto;
+      }
+
+      /* ---------- Buttons ---------- */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--s-2);
+        padding: 11px 16px;
+        border: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+        color: var(--ink);
+        font-weight: 800;
+        font-size: var(--fs-sm);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        white-space: nowrap;
+        box-shadow: var(--sh-1);
+        transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+          background-color var(--dur) var(--ease);
+      }
+      .btn:active {
+        transform: translate(4px, 4px);
+        box-shadow: var(--sh-flat);
+      }
+      .btn i {
+        font-size: var(--icon-sm);
+      }
+      .btn-primary {
+        background: var(--tomato);
+        color: #fff;
+      }
+      .btn:disabled {
+        cursor: progress;
+        opacity: 0.72;
+        transform: none;
+      }
+      .btn-block {
+        width: 100%;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .btn:hover {
+          transform: translate(-2px, -2px);
+          box-shadow: var(--sh-2);
+        }
+        .btn-primary:hover {
+          background: #c22f1d;
+        }
+      }
+
+      /* ---------- Suggestions ---------- */
+      .suggest {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--s-2);
+      }
+      .suggest button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border: var(--bw-2) solid var(--ink);
+        background: var(--paper-2);
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        box-shadow: 3px 3px 0 var(--ink);
+        transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+          background-color var(--dur) var(--ease);
+      }
+      .suggest button:active {
+        transform: translate(3px, 3px);
+        box-shadow: var(--sh-flat);
+      }
+      .suggest button i {
+        font-size: 13px;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .suggest button:hover {
+          transform: translate(-2px, -2px);
+          box-shadow: var(--sh-1);
+          background: var(--mustard);
+        }
+      }
+
+      /* ---------- Composer ---------- */
+      .composer {
+        border-top: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+        padding: var(--s-3) var(--s-4);
+        display: flex;
+        gap: var(--s-3);
+        align-items: center;
+      }
+      .composer input {
+        flex: 1;
+        min-width: 0;
+        padding: 12px 14px;
+        border: var(--bw-2) solid var(--ink);
+        background: var(--paper);
+        font-family: var(--font-mono);
+        font-size: var(--fs-sm);
+      }
+      .composer input::placeholder {
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .composer input:focus {
+        outline: none;
+        border-color: var(--tomato);
+        background: var(--paper-2);
+        box-shadow: var(--sh-1);
+      }
+
+      /* ---------- Bottom nav ---------- */
+      .bottombar {
+        display: flex;
+        border-top: var(--bw) solid var(--ink);
+        background: var(--paper-2);
+      }
+      .bottombar .rail-item {
+        flex: 1;
+        flex-direction: column;
+        gap: 4px;
+        padding: 10px 0;
+        border-bottom: 0;
+        border-right: var(--bw-2) solid var(--ink);
+        text-align: center;
+        font-size: 10px;
+      }
+      .bottombar .rail-item[aria-current="page"] {
+        box-shadow: inset 0 -5px 0 var(--ink);
+      }
+      .bottombar .rail-item:last-child {
+        border-right: 0;
+      }
+      @media (min-width: 900px) {
+        .rail {
+          display: flex;
+        }
+        .bottombar {
+          display: none;
+        }
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .rise {
+          opacity: 1;
+          transform: translate(0, 0);
+          transition: opacity var(--dur-enter) var(--ease), transform var(--dur-enter) var(--ease);
+          transition-delay: var(--d, 0ms);
+        }
+        @starting-style {
+          .rise {
+            opacity: 0;
+            transform: translate(0, 10px);
+          }
+        }
+
+        /* Disclosure: fade the "why" panel in instead of popping into place */
+        .why-body {
+          opacity: 1;
+          transform: translate(0, 0);
+          transition: opacity 180ms var(--ease), transform 180ms var(--ease);
+        }
+        @starting-style {
+          .why-body {
+            opacity: 0;
+            transform: translate(0, -4px);
+          }
+        }
+
+        /* Functional loader — a spinning indicator makes the wait feel shorter */
+        .spin {
+          animation: spin 700ms linear infinite;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <!-- Rail -->
+      <aside class="rail" aria-label="Primary">
+        <div class="rail-brand">
+          <div class="monogram"><i class="ph ph-storefront"></i></div>
+          <div>
+            <div class="name">Warung Oreo</div>
+            <div class="sub">UPM · Canteen 01</div>
+          </div>
+        </div>
+        <nav class="rail-nav">
+          <button class="rail-item" data-nav="orders" aria-current="page"><i class="ph ph-chats"></i>Orders</button>
+          <button class="rail-item" data-nav="plan"><i class="ph ph-clipboard-text"></i>Plan<span class="count">04</span></button>
+          <button class="rail-item" data-nav="menu"><i class="ph ph-bowl-food"></i>Menu<span class="count">06</span></button>
+          <button class="rail-item" data-nav="pro"><i class="ph ph-crown-simple"></i>Pro</button>
+        </nav>
+        <div class="rail-foot">
+          <button class="btn btn-primary btn-block" onclick="runAgents(this)"><i class="ph ph-play"></i>Run agents</button>
+        </div>
+      </aside>
+
+      <div class="main-col">
+        <div class="awning" aria-hidden="true"></div>
+        <div class="ticker">
+          <span><i class="ph ph-storefront"></i> WARUNG OREO</span><span class="sep">///</span>
+          <span>CANTEEN 01 · UPM</span><span class="sep">///</span>
+          <span>MON 12 OCT</span><span class="sep">///</span>
+          <span>OPEN 07:00</span><span class="sep">///</span>
+          <span>PIN DEMO-UPM-001</span>
+        </div>
+
+        <div class="topbar">
+          <i class="ph ph-chats" style="font-size: var(--icon-md)" id="topIcon"></i>
+          <span class="screen-title" id="topTitle">Orders</span>
+          <span class="spacer"></span>
+          <div class="switches">
+            <label class="toggle"><input type="checkbox" /><span class="box"></span>Payday</label>
+            <label class="toggle"><input type="checkbox" /><span class="box"></span>Rain</label>
+          </div>
+        </div>
+
+        <div class="screens">
+          <!-- ============ ORDERS (chat) ============ -->
+          <section class="screen active" data-screen="orders">
+            <div class="scroll">
+              <div class="special rise" style="--d: 0ms">
+                <div class="eyebrow">Today's special · Mon 12 Oct</div>
+                <h1>Kak, teh tarik habis.</h1>
+                <p>Teh tarik sold out before the morning rush. Order 40 more, mark down the tuna sandwich, and skip the rest.</p>
+                <div class="row">
+                  <span class="chalk-tag hot"><i class="ph ph-warning"></i> 3 sold out</span>
+                  <span class="chalk-tag"><i class="ph ph-tag"></i> 1 markdown</span>
+                  <span class="chalk-tag"><i class="ph ph-coins"></i> RM 152.16 impact</span>
+                </div>
+              </div>
+
+              <div class="msg rise" style="--d: 40ms">
+                <div class="who"><i class="ph ph-storefront"></i>Warung<span class="spacer"></span>05:40</div>
+                <div class="body">Pagi kak. Tell me what you need for tomorrow — or tap a suggestion below.</div>
+              </div>
+              <div class="msg user rise" style="--d: 80ms">
+                <div class="who"><i class="ph ph-user"></i>You<span class="spacer"></span>05:41</div>
+                <div class="body">Prepare the plan.</div>
+              </div>
+
+              <div class="runlog rise" style="--d: 120ms">
+                <div class="runlog-head"><i class="ph ph-cpu"></i>Run trace<span class="spacer"></span><span class="stamp">4 agents · validated</span></div>
+                <div class="runlog-body">
+                  <div class="runlog-row"><span class="agent">Planner</span><span class="note">Goal received. Context: payday off, rain off.</span></div>
+                  <div class="runlog-row"><span class="agent">Demand</span><span class="note">Forecast 6 dishes from same-weekday sales.</span></div>
+                  <div class="runlog-row"><span class="agent">Expiry</span><span class="note">Sandwich tuna flagged for 30% markdown.</span></div>
+                  <div class="runlog-row"><span class="agent">Validator</span><span class="note">Plan approved. Order sheet ready.</span></div>
+                </div>
+              </div>
+
+              <div class="msg rise" style="--d: 160ms">
+                <div class="who"><i class="ph ph-storefront"></i>Warung<span class="spacer"></span>05:41</div>
+                <div class="body">Plan siap. 4 things need your attention today — RM 152.16 total impact.</div>
+              </div>
+
+              <div class="panel rise" style="--d: 200ms">
+                <div class="panel-head"><i class="ph ph-clipboard-text"></i>Plan summary<span class="spacer"></span><span class="n">05:41</span></div>
+                <div class="metrics" style="border:0; box-shadow:none">
+                  <div class="m"><div class="k">Actions</div><div class="v">04</div></div>
+                  <div class="m"><div class="k">Restock</div><div class="v">03</div></div>
+                  <div class="m"><div class="k">Markdown</div><div class="v">01</div></div>
+                  <div class="m"><div class="k">Savings</div><div class="v good">62%</div></div>
+                </div>
+                <div class="panel-body" style="border-top: var(--bw-2) solid var(--ink); display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+                  <span class="tick" style="flex:1; min-width:150px">Backtest vs same-day-last-week baseline</span>
+                  <button class="btn btn-primary" onclick="go('plan')"><i class="ph ph-clipboard-text"></i>View order sheet</button>
+                </div>
+              </div>
+
+              <div class="panel rise" style="--d: 240ms">
+                <div class="panel-head"><i class="ph ph-bowl-food"></i>Menu today<span class="spacer"></span><span class="n">06 DISHES</span></div>
+                <div>
+                  <div class="menu-row is-out">
+                    <div class="ico"><i class="ph ph-coffee"></i></div>
+                    <div>
+                      <div class="menu-line"><span class="name">Teh tarik</span><span class="leader"></span><span class="price risk">RM 2.50</span></div>
+                      <div class="menu-meta">DRK-02 · Beverage Supply Co.</div>
+                      <div class="menu-stamps"><span class="stamp out"><i class="ph ph-warning"></i> Sold out</span><span class="stamp">Order 40</span><span class="stamp warn">RM 79.20 at risk</span></div>
+                    </div>
+                  </div>
+                  <div class="menu-row is-markdown">
+                    <div class="ico"><i class="ph ph-bread"></i></div>
+                    <div>
+                      <div class="menu-line"><span class="name">Sandwich tuna</span><span class="leader"></span><span class="price warn">RM 2.80</span></div>
+                      <div class="menu-meta">MEL-05 · FreshBites Supply · was RM 4.00</div>
+                      <div class="menu-stamps"><span class="stamp warn"><i class="ph ph-tag"></i> Markdown 30%</span><span class="stamp">Expires 18:00</span><span class="stamp ok">RM 20.16 recovered</span></div>
+                    </div>
+                  </div>
+                  <div class="menu-row">
+                    <div class="ico"><i class="ph ph-bowl-food"></i></div>
+                    <div>
+                      <div class="menu-line"><span class="name">Nasi lemak</span><span class="leader"></span><span class="price">RM 3.00</span></div>
+                      <div class="menu-meta">MEL-01 · Makcik Kitchen · 44 on shelf</div>
+                      <div class="menu-stamps"><span class="stamp ok"><i class="ph ph-check"></i> Healthy</span><span class="stamp">Margin RM 1.20</span></div>
+                    </div>
+                  </div>
+                  <div class="menu-row">
+                    <div class="ico"><i class="ph ph-bowl-food"></i></div>
+                    <div>
+                      <div class="menu-line"><span class="name">Mee goreng</span><span class="leader"></span><span class="price">RM 4.50</span></div>
+                      <div class="menu-meta">MEL-03 · Makcik Kitchen · 21 on shelf</div>
+                      <div class="menu-stamps"><span class="stamp ok"><i class="ph ph-check"></i> Healthy</span><span class="stamp">Margin RM 2.50</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="suggest rise" style="--d: 280ms">
+                <button onclick="ask('Prepare the plan')"><i class="ph ph-play"></i>Prepare the plan</button>
+                <button onclick="ask(&quot;What's sold out?&quot;)"><i class="ph ph-warning"></i>What's sold out?</button>
+                <button onclick="ask('Show markdowns')"><i class="ph ph-tag"></i>Show markdowns</button>
+                <button onclick="ask('Savings vs baseline')"><i class="ph ph-coins"></i>Savings vs baseline</button>
+              </div>
+            </div>
+
+            <div class="composer">
+              <input id="chatInput" type="text" placeholder="Ask the warung" onkeydown="if(event.key==='Enter')ask(this.value)" />
+              <button class="btn btn-primary" onclick="ask(document.getElementById('chatInput').value)"><i class="ph ph-paper-plane-tilt"></i>Send</button>
+            </div>
+          </section>
+
+          <!-- ============ PLAN (order sheet) ============ -->
+          <section class="screen" data-screen="plan">
+            <div class="scroll">
+              <div class="special rise" style="--d: 0ms">
+                <div class="eyebrow">Order sheet · Mon 12 Oct</div>
+                <h1>Today's plan</h1>
+                <p>Ranked by the ringgit each action saves. Validated against budget and supplier limits.</p>
+                <div class="row">
+                  <span class="chalk-tag hot"><i class="ph ph-seal-check"></i> Validated</span>
+                  <span class="chalk-tag"><i class="ph ph-clock"></i> Ready by 06:00</span>
+                </div>
+              </div>
+
+              <div class="metrics rise" style="--d: 40ms">
+                <div class="m"><div class="k">Actions</div><div class="v">04</div></div>
+                <div class="m"><div class="k">RM impact</div><div class="v hot">152.16</div></div>
+                <div class="m"><div class="k">Order units</div><div class="v">120</div></div>
+                <div class="m"><div class="k">Status</div><div class="v good">OK</div></div>
+              </div>
+
+              <div class="panel rise" style="--d: 80ms">
+                <div class="panel-head"><i class="ph ph-list-numbers"></i>Ranked actions<span class="spacer"></span><span class="n">BY IMPACT</span></div>
+                <div>
+                  <div class="rank-row">
+                    <div class="rank">1</div>
+                    <div>
+                      <div class="t">Teh tarik</div>
+                      <div class="a">Restock 40 units</div>
+                      <div class="why">Stock 0 &lt; expected demand 44 (P10 33). 44 units at risk without a restock.</div>
+                      <button class="why-toggle" onclick="this.closest('.rank-row').classList.toggle('open')">Why this action? <i class="ph ph-caret-down"></i></button>
+                      <div class="why-body">
+                        <div class="why-note">Expected demand is 44 units and the shelf is empty. Ordering 40 covers the P10 floor of 33 and most of expected demand.</div>
+                        <div class="fc">
+                          <div class="hd">Forecast vs stock</div>
+                          <div class="pb"><span class="lb">P10</span><span class="track"><span class="fill brown" style="width:60%; display:block"></span></span><span class="val">33</span></div>
+                          <div class="pb"><span class="lb">Expected</span><span class="track"><span class="fill brown" style="width:80%; display:block"></span></span><span class="val">44</span></div>
+                          <div class="pb"><span class="lb">P90</span><span class="track"><span class="fill brown" style="width:100%; display:block"></span></span><span class="val">55</span></div>
+                          <div class="pb"><span class="lb">Stock</span><span class="track"><span class="fill" style="width:2%; display:block"></span></span><span class="val">0</span></div>
+                        </div>
+                      </div>
+                    </div>
+                    <span class="price risk">RM 79.20</span>
+                  </div>
+                  <div class="rank-row">
+                    <div class="rank">2</div>
+                    <div>
+                      <div class="t">Kuih lapis</div>
+                      <div class="a">Restock 30 units</div>
+                      <div class="why">Stock 0 &lt; expected demand 32 (P10 24). 32 units at risk without a restock.</div>
+                      <button class="why-toggle" onclick="this.closest('.rank-row').classList.toggle('open')">Why this action? <i class="ph ph-caret-down"></i></button>
+                      <div class="why-body">
+                        <div class="why-note">Kuih lapis clears in the morning. Ordering 30 keeps the tray full through the lunch window.</div>
+                        <div class="fc">
+                          <div class="hd">Forecast vs stock</div>
+                          <div class="pb"><span class="lb">P10</span><span class="track"><span class="fill brown" style="width:60%; display:block"></span></span><span class="val">24</span></div>
+                          <div class="pb"><span class="lb">Expected</span><span class="track"><span class="fill brown" style="width:80%; display:block"></span></span><span class="val">32</span></div>
+                          <div class="pb"><span class="lb">P90</span><span class="track"><span class="fill brown" style="width:100%; display:block"></span></span><span class="val">40</span></div>
+                          <div class="pb"><span class="lb">Stock</span><span class="track"><span class="fill" style="width:2%; display:block"></span></span><span class="val">0</span></div>
+                        </div>
+                      </div>
+                    </div>
+                    <span class="price risk">RM 28.80</span>
+                  </div>
+                  <div class="rank-row">
+                    <div class="rank">3</div>
+                    <div>
+                      <div class="t">Karipap</div>
+                      <div class="a">Restock 50 units</div>
+                      <div class="why">Stock 0 &lt; expected demand 48 (P10 38). 48 units at risk without a restock.</div>
+                      <button class="why-toggle" onclick="this.closest('.rank-row').classList.toggle('open')">Why this action? <i class="ph ph-caret-down"></i></button>
+                      <div class="why-body">
+                        <div class="why-note">Karipap is the cheapest dish and sells out first. Ordering 50 stays inside the supplier limit.</div>
+                        <div class="fc">
+                          <div class="hd">Forecast vs stock</div>
+                          <div class="pb"><span class="lb">P10</span><span class="track"><span class="fill brown" style="width:66%; display:block"></span></span><span class="val">38</span></div>
+                          <div class="pb"><span class="lb">Expected</span><span class="track"><span class="fill brown" style="width:83%; display:block"></span></span><span class="val">48</span></div>
+                          <div class="pb"><span class="lb">P90</span><span class="track"><span class="fill brown" style="width:100%; display:block"></span></span><span class="val">58</span></div>
+                          <div class="pb"><span class="lb">Stock</span><span class="track"><span class="fill" style="width:2%; display:block"></span></span><span class="val">0</span></div>
+                        </div>
+                      </div>
+                    </div>
+                    <span class="price risk">RM 24.00</span>
+                  </div>
+                  <div class="rank-row">
+                    <div class="rank">4</div>
+                    <div>
+                      <div class="t">Sandwich tuna</div>
+                      <div class="a">Markdown 30% — expires tomorrow 18:00</div>
+                      <div class="why">18 units surplus. 40% expected to sell at RM 2.80, recovering RM 20.16.</div>
+                      <button class="why-toggle" onclick="this.closest('.rank-row').classList.toggle('open')">Why this action? <i class="ph ph-caret-down"></i></button>
+                      <div class="why-body">
+                        <div class="why-note">30 units on shelf against 12 expected sales. A 30% markdown recovers most of the 18 surplus before the 18:00 expiry.</div>
+                        <div class="fc">
+                          <div class="hd">Forecast vs stock</div>
+                          <div class="pb"><span class="lb">P10</span><span class="track"><span class="fill brown" style="width:27%; display:block"></span></span><span class="val">8</span></div>
+                          <div class="pb"><span class="lb">Expected</span><span class="track"><span class="fill brown" style="width:40%; display:block"></span></span><span class="val">12</span></div>
+                          <div class="pb"><span class="lb">P90</span><span class="track"><span class="fill brown" style="width:53%; display:block"></span></span><span class="val">16</span></div>
+                          <div class="pb"><span class="lb">Stock</span><span class="track"><span class="fill good" style="width:100%; display:block"></span></span><span class="val">30</span></div>
+                        </div>
+                      </div>
+                    </div>
+                    <span class="price ok">RM 20.16</span>
+                  </div>
+                  <div class="rank-row">
+                    <div class="rank">5</div>
+                    <div>
+                      <div class="t">Nasi lemak</div>
+                      <div class="a">No action needed</div>
+                      <div class="why">Stock 44 covers expected demand 32 (P10 24, P90 40).</div>
+                      <button class="why-toggle" onclick="this.closest('.rank-row').classList.toggle('open')">Why no action? <i class="ph ph-caret-down"></i></button>
+                      <div class="why-body">
+                        <div class="why-note">Stock clears the P90 of 40, so there is nothing to order and nothing to mark down.</div>
+                        <div class="fc">
+                          <div class="hd">Forecast vs stock</div>
+                          <div class="pb"><span class="lb">P10</span><span class="track"><span class="fill brown" style="width:55%; display:block"></span></span><span class="val">24</span></div>
+                          <div class="pb"><span class="lb">Expected</span><span class="track"><span class="fill brown" style="width:73%; display:block"></span></span><span class="val">32</span></div>
+                          <div class="pb"><span class="lb">P90</span><span class="track"><span class="fill brown" style="width:91%; display:block"></span></span><span class="val">40</span></div>
+                          <div class="pb"><span class="lb">Stock</span><span class="track"><span class="fill good" style="width:100%; display:block"></span></span><span class="val">44</span></div>
+                        </div>
+                      </div>
+                    </div>
+                    <span class="price">—</span>
+                  </div>
+                  <div class="rank-row">
+                    <div class="rank">6</div>
+                    <div>
+                      <div class="t">Mee goreng</div>
+                      <div class="a">No action needed</div>
+                      <div class="why">Stock 21 covers expected demand 16 (P10 12, P90 20).</div>
+                      <button class="why-toggle" onclick="this.closest('.rank-row').classList.toggle('open')">Why no action? <i class="ph ph-caret-down"></i></button>
+                      <div class="why-body">
+                        <div class="why-note">Stock clears the P90 of 20. Adding more would risk spoilage on a 1-day shelf life.</div>
+                        <div class="fc">
+                          <div class="hd">Forecast vs stock</div>
+                          <div class="pb"><span class="lb">P10</span><span class="track"><span class="fill brown" style="width:57%; display:block"></span></span><span class="val">12</span></div>
+                          <div class="pb"><span class="lb">Expected</span><span class="track"><span class="fill brown" style="width:76%; display:block"></span></span><span class="val">16</span></div>
+                          <div class="pb"><span class="lb">P90</span><span class="track"><span class="fill brown" style="width:95%; display:block"></span></span><span class="val">20</span></div>
+                          <div class="pb"><span class="lb">Stock</span><span class="track"><span class="fill good" style="width:100%; display:block"></span></span><span class="val">21</span></div>
+                        </div>
+                      </div>
+                    </div>
+                    <span class="price">—</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="signs rise" style="--d: 120ms">
+                <div class="sign" style="transform: rotate(-1.2deg)">
+                  <div class="dish">Sandwich tuna</div>
+                  <div class="off">30% OFF</div>
+                  <div class="was">RM 2.80 <s>RM 4.00</s></div>
+                </div>
+                <div class="sign" style="transform: rotate(1deg); background: var(--paper-2)">
+                  <div class="dish">Promo ends</div>
+                  <div class="off" style="font-size: var(--fs-xl)">18:00 TODAY</div>
+                  <div class="was">Before the close-down sweep</div>
+                </div>
+              </div>
+
+              <div class="receipt rise" style="--d: 160ms">
+                <div class="rhead">WARUNG OREO · ORDER</div>
+                <div class="rsub">PIN DEMO-UPM-001 · MON 12 OCT</div>
+                <div class="rline"><span>Teh tarik × 40</span><span class="dots"></span><span>28.00</span></div>
+                <div class="rline"><span>Karipap × 50</span><span class="dots"></span><span>25.00</span></div>
+                <div class="rline"><span>Kuih lapis × 30</span><span class="dots"></span><span>18.00</span></div>
+                <div class="rtotal"><span>SPEND</span><span>RM 71.00</span></div>
+                <div class="rtotal" style="border: 0; padding-top: 4px"><span>AT RISK IF SKIPPED</span><span>RM 132.00</span></div>
+                <div class="supplier">Beverage Supply Co.</div>
+                <div class="rline"><span>Teh tarik</span><span class="dots"></span><span>40 units</span></div>
+                <div class="supplier">Snack Distributors</div>
+                <div class="rline"><span>Karipap</span><span class="dots"></span><span>50 units</span></div>
+                <div class="supplier">Kuih Express</div>
+                <div class="rline"><span>Kuih lapis</span><span class="dots"></span><span>30 units</span></div>
+              </div>
+
+              <div class="panel rise" style="--d: 200ms">
+                <div class="panel-head"><i class="ph ph-chart-bar"></i>Proof<span class="spacer"></span><span class="n">14-DAY BACKTEST</span></div>
+                <div class="panel-body">
+                  <div class="metrics" style="border:0; box-shadow:none; margin-bottom: 16px">
+                    <div class="m"><div class="k">Baseline loss</div><div class="v hot">312.40</div></div>
+                    <div class="m"><div class="k">With SmartStock</div><div class="v good">118.75</div></div>
+                    <div class="m"><div class="k">Saved</div><div class="v">193.65</div></div>
+                    <div class="m"><div class="k">Savings</div><div class="v good">62%</div></div>
+                  </div>
+
+                  <div class="proof-item">
+                    <div class="nm">Teh tarik</div>
+                    <div class="pb"><span class="lb">Baseline</span><span class="track"><span class="fill" style="width:92%; display:block"></span></span><span class="val">55</span></div>
+                    <div class="pb"><span class="lb">SmartStock</span><span class="track"><span class="fill good" style="width:25%; display:block"></span></span><span class="val">15</span></div>
+                  </div>
+                  <div class="proof-item">
+                    <div class="nm">Karipap</div>
+                    <div class="pb"><span class="lb">Baseline</span><span class="track"><span class="fill" style="width:100%; display:block"></span></span><span class="val">60</span></div>
+                    <div class="pb"><span class="lb">SmartStock</span><span class="track"><span class="fill good" style="width:23%; display:block"></span></span><span class="val">14</span></div>
+                  </div>
+                  <div class="proof-item">
+                    <div class="nm">Kuih lapis</div>
+                    <div class="pb"><span class="lb">Baseline</span><span class="track"><span class="fill" style="width:80%; display:block"></span></span><span class="val">48</span></div>
+                    <div class="pb"><span class="lb">SmartStock</span><span class="track"><span class="fill good" style="width:18%; display:block"></span></span><span class="val">11</span></div>
+                  </div>
+                  <div class="proof-item">
+                    <div class="nm">Sandwich tuna</div>
+                    <div class="pb"><span class="lb">Baseline</span><span class="track"><span class="fill" style="width:58%; display:block"></span></span><span class="val">35</span></div>
+                    <div class="pb"><span class="lb">SmartStock</span><span class="track"><span class="fill good" style="width:17%; display:block"></span></span><span class="val">10</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============ MENU (stock) ============ -->
+          <section class="screen" data-screen="menu">
+            <div class="scroll">
+              <div class="special rise" style="--d: 0ms">
+                <div class="eyebrow">Menu · 6 dishes · Mon 12 Oct</div>
+                <h1>Today's menu</h1>
+                <p>Everything on the shelf right now — stock on hand, price, cost and margin per dish.</p>
+              </div>
+
+              <div class="dish-grid rise" style="--d: 40ms">
+                <article class="dish">
+                  <div class="dish-top">
+                    <span class="dish-code"><i class="ph ph-bowl-food"></i>MEL-01</span>
+                    <span class="stamp ok"><i class="ph ph-check"></i> Healthy</span>
+                  </div>
+                  <div>
+                    <div class="dish-name">Nasi lemak</div>
+                    <div class="dish-sup">Makcik Kitchen Sdn Bhd</div>
+                  </div>
+                  <div class="dish-qty"><span class="n">44</span><span class="u">on shelf</span></div>
+                  <div class="dish-foot"><span class="price">RM 3.00</span><span class="lbl">Margin RM 1.20</span></div>
+                </article>
+
+                <article class="dish">
+                  <div class="dish-top">
+                    <span class="dish-code"><i class="ph ph-coffee"></i>DRK-02</span>
+                    <span class="stamp out"><i class="ph ph-warning"></i> Sold out</span>
+                  </div>
+                  <div>
+                    <div class="dish-name">Teh tarik</div>
+                    <div class="dish-sup">Beverage Supply Co.</div>
+                  </div>
+                  <div class="dish-qty out"><span class="n">00</span><span class="u">on shelf</span></div>
+                  <div class="dish-foot"><span class="price">RM 2.50</span><span class="lbl">Order 40 in plan</span></div>
+                </article>
+
+                <article class="dish">
+                  <div class="dish-top">
+                    <span class="dish-code"><i class="ph ph-bowl-food"></i>MEL-03</span>
+                    <span class="stamp ok"><i class="ph ph-check"></i> Healthy</span>
+                  </div>
+                  <div>
+                    <div class="dish-name">Mee goreng</div>
+                    <div class="dish-sup">Makcik Kitchen Sdn Bhd</div>
+                  </div>
+                  <div class="dish-qty"><span class="n">21</span><span class="u">on shelf</span></div>
+                  <div class="dish-foot"><span class="price">RM 4.50</span><span class="lbl">Margin RM 2.50</span></div>
+                </article>
+
+                <article class="dish">
+                  <div class="dish-top">
+                    <span class="dish-code"><i class="ph ph-cookie"></i>SNK-04</span>
+                    <span class="stamp out"><i class="ph ph-warning"></i> Sold out</span>
+                  </div>
+                  <div>
+                    <div class="dish-name">Karipap</div>
+                    <div class="dish-sup">Snack Distributors</div>
+                  </div>
+                  <div class="dish-qty out"><span class="n">00</span><span class="u">on shelf</span></div>
+                  <div class="dish-foot"><span class="price">RM 1.00</span><span class="lbl">Order 50 in plan</span></div>
+                </article>
+
+                <article class="dish">
+                  <div class="dish-top">
+                    <span class="dish-code"><i class="ph ph-bread"></i>MEL-05</span>
+                    <span class="stamp warn"><i class="ph ph-tag"></i> Markdown</span>
+                  </div>
+                  <div>
+                    <div class="dish-name">Sandwich tuna</div>
+                    <div class="dish-sup">FreshBites Supply</div>
+                  </div>
+                  <div class="dish-qty"><span class="n">30</span><span class="u">on shelf</span></div>
+                  <div class="dish-foot"><span class="price warn">RM 2.80</span><span class="lbl">Expires 18:00</span></div>
+                </article>
+
+                <article class="dish">
+                  <div class="dish-top">
+                    <span class="dish-code"><i class="ph ph-cake"></i>SNK-06</span>
+                    <span class="stamp out"><i class="ph ph-warning"></i> Sold out</span>
+                  </div>
+                  <div>
+                    <div class="dish-name">Kuih lapis</div>
+                    <div class="dish-sup">Kuih Express</div>
+                  </div>
+                  <div class="dish-qty out"><span class="n">00</span><span class="u">on shelf</span></div>
+                  <div class="dish-foot"><span class="price">RM 1.50</span><span class="lbl">Order 30 in plan</span></div>
+                </article>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============ PRO ============ -->
+          <section class="screen" data-screen="pro">
+            <div class="scroll">
+              <div class="special rise" style="--d: 0ms">
+                <div class="eyebrow">Warung Pro · save every morning</div>
+                <h1>Stop guessing.</h1>
+                <p>Let the agents forecast demand, flag expiry and prove the savings — before you open the shutters.</p>
+                <div class="row">
+                  <span class="chalk-tag hot"><i class="ph ph-coins"></i> RM 850+ saved / month</span>
+                  <span class="chalk-tag"><i class="ph ph-clock"></i> 14-day free trial</span>
+                </div>
+              </div>
+
+              <div class="plans rise" style="--d: 40ms">
+                <div class="plan">
+                  <span class="tagline">Starter</span>
+                  <h3>Free</h3>
+                  <div class="desc">For a stall just getting started with daily planning.</div>
+                  <div class="amount"><span class="cur">RM</span><span class="big">0</span><span class="per">/forever</span></div>
+                  <ul>
+                    <li><i class="ph ph-check-fat"></i>3-day sales history</li>
+                    <li><i class="ph ph-check-fat"></i>Daily demand forecast</li>
+                    <li><i class="ph ph-check-fat"></i>Basic restock alerts</li>
+                    <li><i class="ph ph-check-fat"></i>Email support</li>
+                  </ul>
+                  <button class="btn btn-block">Current plan</button>
+                </div>
+
+                <div class="plan hot">
+                  <span class="tagline">Most popular</span>
+                  <h3>Pro</h3>
+                  <div class="desc">For busy owners who want the full edge.</div>
+                  <div class="amount"><span class="cur">RM</span><span class="big">49</span><span class="per">/month</span></div>
+                  <ul>
+                    <li><i class="ph ph-check-fat"></i>8-week sales history</li>
+                    <li><i class="ph ph-check-fat"></i>AI agent plan + validator</li>
+                    <li><i class="ph ph-check-fat"></i>Expiry markdowns & supplier orders</li>
+                    <li><i class="ph ph-check-fat"></i>Baseline vs SmartStock proof</li>
+                    <li><i class="ph ph-check-fat"></i>Payday & rain tuning</li>
+                  </ul>
+                  <button class="btn btn-primary btn-block">Start free trial</button>
+                </div>
+
+                <div class="plan">
+                  <span class="tagline">Chain</span>
+                  <h3>Business</h3>
+                  <div class="desc">For campus vendors running more than one stall.</div>
+                  <div class="amount"><span class="cur">RM</span><span class="big">129</span><span class="per">/month</span></div>
+                  <ul>
+                    <li><i class="ph ph-check-fat"></i>Everything in Pro</li>
+                    <li><i class="ph ph-check-fat"></i>Unlimited stalls</li>
+                    <li><i class="ph ph-check-fat"></i>Multi-user accounts</li>
+                    <li><i class="ph ph-check-fat"></i>WhatsApp alerts</li>
+                  </ul>
+                  <button class="btn btn-block">Contact sales</button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <nav class="bottombar" aria-label="Primary">
+          <button class="rail-item" data-nav="orders" aria-current="page"><i class="ph ph-chats"></i>Orders</button>
+          <button class="rail-item" data-nav="plan"><i class="ph ph-clipboard-text"></i>Plan</button>
+          <button class="rail-item" data-nav="menu"><i class="ph ph-bowl-food"></i>Menu</button>
+          <button class="rail-item" data-nav="pro"><i class="ph ph-crown-simple"></i>Pro</button>
+        </nav>
+      </div>
+    </div>
+
+    <script>
+      var TITLES = { orders: "Orders", plan: "Plan", menu: "Menu", pro: "Pro" };
+      var ICONS = { orders: "ph-chats", plan: "ph-clipboard-text", menu: "ph-bowl-food", pro: "ph-crown-simple" };
+
+      function go(id) {
+        document.querySelectorAll(".screen").forEach(function (s) {
+          s.classList.toggle("active", s.dataset.screen === id);
+        });
+        document.querySelectorAll("[data-nav]").forEach(function (b) {
+          var on = b.dataset.nav === id;
+          if (on) b.setAttribute("aria-current", "page");
+          else b.removeAttribute("aria-current");
+        });
+        var title = document.getElementById("topTitle");
+        var icon = document.getElementById("topIcon");
+        if (title) title.textContent = TITLES[id];
+        if (icon) icon.className = "ph " + ICONS[id];
+      }
+
+      document.querySelectorAll("[data-nav]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          go(b.dataset.nav);
+        });
+      });
+
+      /* ---- Chat ---- */
+      var CANNED = [
+        { k: /prepare|plan|restock/i, r: "Plan is ready. 4 actions need attention — RM 152.16 impact. Open the Plan tab for the order sheet." },
+        { k: /sold out|out of stock|risk|habis/i, r: "Sold out: teh tarik, karipap and kuih lapis. Ordering 40, 50 and 30 units clears the morning rush." },
+        { k: /markdown|discount|expiry/i, r: "One markdown today: sandwich tuna, 30% off — RM 2.80 instead of RM 4.00. It expires at 18:00." },
+        { k: /saving|baseline|backtest/i, r: "Baseline loss RM 312.40, with SmartStock RM 118.75 — 62% saved across the 14-day backtest." }
+      ];
+
+      function esc(s) {
+        return String(s).replace(/[<>&]/g, function (c) {
+          return c === "<" ? "&lt;" : c === ">" ? "&gt;" : "&amp;";
+        });
+      }
+      var __min = 41;
+      function clock() {
+        __min = __min < 59 ? __min + 1 : 59;
+        return "05:" + ("0" + __min).slice(-2);
+      }
+      function bubble(role, who, text, icon) {
+        var el = document.createElement("div");
+        el.className = "msg rise" + (role === "user" ? " user" : "");
+        el.innerHTML =
+          '<div class="who"><i class="ph ' + icon + '"></i>' + who +
+          '<span class="spacer"></span>' + clock() + '</div><div class="body">' + esc(text) + "</div>";
+        return el;
+      }
+
+      function ask(text) {
+        text = (text || "").trim();
+        if (!text) return;
+        var scroll = document.querySelector('[data-screen="orders"] .scroll');
+        var suggest = scroll.querySelector(".suggest");
+        var reply = "Ask me about the plan, what's sold out, markdowns, or savings.";
+        for (var i = 0; i < CANNED.length; i++) {
+          if (CANNED[i].k.test(text)) {
+            reply = CANNED[i].r;
+            break;
+          }
+        }
+        scroll.insertBefore(bubble("user", "You", text, "ph-user"), suggest);
+        scroll.insertBefore(bubble("bot", "Warung", reply, "ph-storefront"), suggest);
+        scroll.scrollTop = scroll.scrollHeight;
+        var inp = document.getElementById("chatInput");
+        if (inp) inp.value = "";
+      }
+
+      function runAgents(btn) {
+        var old = btn.innerHTML;
+        btn.innerHTML = '<i class="ph ph-circle-notch spin"></i>Running…';
+        btn.disabled = true;
+        setTimeout(function () {
+          btn.innerHTML = old;
+          btn.disabled = false;
+        }, 900);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1156 @@
+<!doctype html>
+<!--
+  SmartStock — Design System v3 · "Cold Signal"
+  Pass 1: design system (tokens + primitives) + app shell specimen.
+  No screens yet — screens get built on top of this.
+
+  Direction : dark graphite base, single electric-lime accent, grotesk + mono.
+  Dials     : DESIGN_VARIANCE 4 · MOTION_INTENSITY 4 · VISUAL_DENSITY 6
+  Theme     : dark, locked (no section inverts).
+  Anti-slop : no purple, no Inter, no glassmorphism, no infinite loops.
+
+  Fonts: loaded from Google Fonts for this single-file prototype.
+  In production these should be self-hosted with @font-face + font-display: swap.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>SmartStock — Design System v3 · Cold Signal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ============================================================
+         1. TOKENS
+         ============================================================ */
+      :root {
+        /* --- Base (graphite, cool — never warm) --- */
+        --bg: #0b0e12;
+        --surface-1: #11151b;
+        --surface-2: #161b22;
+        --surface-sunken: #080a0d;
+
+        /* --- Lines --- */
+        --line: rgba(255, 255, 255, 0.08);
+        --line-strong: rgba(255, 255, 255, 0.15);
+
+        /* --- Ink (contrast vs --bg) --- */
+        --ink: #e8ebef; /* 15.4:1  primary */
+        --ink-2: #aeb6c2; /*  8.6:1  secondary */
+        --ink-3: #7c8794; /*  4.9:1  muted — AA floor, do not go lighter */
+
+        /* --- Accent: ONE. Electric lime. --- */
+        --accent: #c6f24e;
+        --accent-strong: #d6ff5f;
+        --accent-ink: #0b0e12; /* text on accent — 14.3:1 */
+        --accent-dim: rgba(198, 242, 78, 0.12);
+        --accent-line: rgba(198, 242, 78, 0.35);
+
+        /* --- Status (functional, not brand accent) --- */
+        --ok: #5eead4;
+        --warn: #e6b455;
+        --risk: #ff7a6b;
+
+        /* --- Radius: one family, documented usage --- */
+        --r-control: 10px; /* buttons, inputs, nav items */
+        --r-surface: 14px; /* cards, panels, sheets */
+        --r-pill: 999px;   /* toggles + status chips only */
+
+        /* --- Space scale (4px base) --- */
+        --s-1: 4px;
+        --s-2: 8px;
+        --s-3: 12px;
+        --s-4: 16px;
+        --s-5: 20px;
+        --s-6: 24px;
+        --s-7: 32px;
+        --s-8: 40px;
+        --s-9: 56px;
+        --s-10: 72px;
+
+        /* --- Type --- */
+        --font-ui: "Space Grotesk", system-ui, sans-serif;
+        --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+        --fs-xs: 12px;
+        --fs-sm: 13px;
+        --fs-base: 15px;
+        --fs-md: 17px;
+        --fs-lg: 20px;
+        --fs-xl: 26px;
+        --fs-2xl: 34px;
+        --fs-3xl: 46px;
+
+        /* --- Elevation: dark, tinted, never pure black --- */
+        --sh-1: inset 0 1px 0 rgba(255, 255, 255, 0.035), 0 10px 26px -18px rgba(0, 0, 0, 0.9);
+        --sh-2: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 20px 44px -22px rgba(0, 0, 0, 0.95);
+        --sh-accent: 0 6px 20px -10px rgba(198, 242, 78, 0.45);
+
+        /* --- Motion (MOTION_INTENSITY 4: fluid CSS, named properties) --- */
+        --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+        --ease-in-out: cubic-bezier(0.7, 0, 0.2, 1);
+        --dur-press: 130ms;
+        --dur-hover: 180ms;
+        --dur-enter: 260ms;
+      }
+
+      /* ============================================================
+         2. RESET / BASE
+         ============================================================ */
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        min-height: 100dvh;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--font-ui);
+        font-size: var(--fs-base);
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+      h1,
+      h2,
+      h3,
+      h4,
+      p,
+      ul,
+      figure {
+        margin: 0;
+      }
+      ul {
+        padding: 0;
+        list-style: none;
+      }
+      a {
+        color: inherit;
+      }
+      button,
+      input {
+        font: inherit;
+      }
+
+      /* Numerals + labels read as data */
+      .mono {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+      }
+      .label {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-3);
+      }
+      .num {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+
+      /* Focus — accent ring, keyboard only */
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      /* ============================================================
+         3. PAGE CHROME (this document, not the app)
+         ============================================================ */
+      .doc {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: var(--s-7) var(--s-5) var(--s-10);
+      }
+      .doc-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: var(--s-5);
+        padding-bottom: var(--s-5);
+        border-bottom: 1px solid var(--line);
+        flex-wrap: wrap;
+      }
+      .doc-head h1 {
+        font-size: var(--fs-2xl);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.05;
+      }
+      .doc-head p {
+        color: var(--ink-2);
+        margin-top: var(--s-2);
+        max-width: 60ch;
+        font-size: var(--fs-sm);
+      }
+      .doc-dials {
+        display: flex;
+        gap: var(--s-2);
+        flex-wrap: wrap;
+      }
+
+      section.block {
+        padding-top: var(--s-8);
+      }
+      section.block > header {
+        display: flex;
+        align-items: baseline;
+        gap: var(--s-3);
+        margin-bottom: var(--s-5);
+      }
+      section.block > header h2 {
+        font-size: var(--fs-lg);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      section.block > header .rule {
+        flex: 1;
+        height: 1px;
+        background: var(--line);
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--s-4);
+      }
+      @media (min-width: 760px) {
+        .grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      /* ============================================================
+         4. SURFACES
+         ============================================================ */
+      .surface {
+        background: var(--surface-1);
+        border: 1px solid var(--line);
+        border-radius: var(--r-surface);
+        box-shadow: var(--sh-1);
+      }
+      .surface-quiet {
+        background: var(--surface-sunken);
+        border: 1px solid var(--line);
+        border-radius: var(--r-surface);
+      }
+      .pad {
+        padding: var(--s-4);
+      }
+
+      /* ============================================================
+         5. CONTROLS
+         ============================================================ */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--s-2);
+        padding: 10px 16px;
+        border-radius: var(--r-control);
+        border: 1px solid transparent;
+        font-weight: 600;
+        font-size: var(--fs-sm);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-hover) ease,
+          border-color var(--dur-hover) ease, color var(--dur-hover) ease, box-shadow var(--dur-hover) ease;
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+      .btn svg {
+        width: 16px;
+        height: 16px;
+        flex: none;
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: var(--accent-ink);
+      }
+      .btn-secondary {
+        background: transparent;
+        border-color: var(--line-strong);
+        color: var(--ink);
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--ink-2);
+      }
+      .btn-danger {
+        background: transparent;
+        border-color: rgba(255, 122, 107, 0.4);
+        color: var(--risk);
+      }
+      .btn-block {
+        width: 100%;
+      }
+      .btn-sm {
+        padding: 7px 12px;
+        font-size: var(--fs-xs);
+      }
+
+      @media (hover: hover) and (pointer: fine) {
+        .btn-primary:hover {
+          background: var(--accent-strong);
+          box-shadow: var(--sh-accent);
+        }
+        .btn-secondary:hover {
+          border-color: var(--accent-line);
+          color: var(--ink);
+        }
+        .btn-ghost:hover {
+          color: var(--ink);
+          background: rgba(255, 255, 255, 0.04);
+        }
+        .btn-danger:hover {
+          border-color: var(--risk);
+          background: rgba(255, 122, 107, 0.08);
+        }
+      }
+
+      /* --- Input --- */
+      .field-group {
+        display: grid;
+        gap: var(--s-2);
+      }
+      .field-label {
+        font-size: var(--fs-xs);
+        font-weight: 600;
+        color: var(--ink-2);
+      }
+      .field {
+        width: 100%;
+        padding: 11px 14px;
+        background: var(--surface-sunken);
+        border: 1px solid var(--line-strong);
+        border-radius: var(--r-control);
+        color: var(--ink);
+        font-size: var(--fs-sm);
+        transition: border-color var(--dur-hover) ease, box-shadow var(--dur-hover) ease;
+      }
+      .field::placeholder {
+        color: var(--ink-3);
+      }
+      .field:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-dim);
+      }
+      .field.is-error {
+        border-color: rgba(255, 122, 107, 0.6);
+      }
+      .field-hint {
+        font-size: var(--fs-xs);
+        color: var(--ink-3);
+      }
+      .field-error {
+        font-size: var(--fs-xs);
+        color: var(--risk);
+      }
+
+      /* --- Segmented control --- */
+      .seg {
+        display: inline-flex;
+        padding: 3px;
+        gap: 2px;
+        background: var(--surface-sunken);
+        border: 1px solid var(--line);
+        border-radius: var(--r-control);
+      }
+      .seg button {
+        padding: 6px 12px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--ink-3);
+        font-size: var(--fs-xs);
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color var(--dur-hover) ease, color var(--dur-hover) ease;
+      }
+      .seg button[aria-pressed="true"] {
+        background: var(--surface-2);
+        color: var(--ink);
+        box-shadow: var(--sh-1);
+      }
+
+      /* --- Toggle --- */
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--s-3);
+        cursor: pointer;
+        user-select: none;
+        font-size: var(--fs-sm);
+        color: var(--ink-2);
+      }
+      .toggle input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .toggle .track {
+        width: 40px;
+        height: 22px;
+        border-radius: var(--r-pill);
+        background: var(--surface-2);
+        border: 1px solid var(--line-strong);
+        position: relative;
+        flex: none;
+        transition: background-color var(--dur-hover) var(--ease-out), border-color var(--dur-hover) ease;
+      }
+      .toggle .track::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--ink-3);
+        transition: transform var(--dur-hover) var(--ease-out), background-color var(--dur-hover) ease;
+      }
+      .toggle input:checked + .track {
+        background: var(--accent-dim);
+        border-color: var(--accent-line);
+      }
+      .toggle input:checked + .track::after {
+        transform: translateX(18px);
+        background: var(--accent);
+      }
+      .toggle input:focus-visible + .track {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      /* --- Status chips --- */
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: var(--r-pill);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.03em;
+        border: 1px solid;
+      }
+      .chip .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+        flex: none;
+      }
+      .chip-ok {
+        color: var(--ok);
+        border-color: rgba(94, 234, 212, 0.3);
+        background: rgba(94, 234, 212, 0.08);
+      }
+      .chip-warn {
+        color: var(--warn);
+        border-color: rgba(230, 180, 85, 0.3);
+        background: rgba(230, 180, 85, 0.08);
+      }
+      .chip-risk {
+        color: var(--risk);
+        border-color: rgba(255, 122, 107, 0.3);
+        background: rgba(255, 122, 107, 0.08);
+      }
+      .chip-neutral {
+        color: var(--ink-2);
+        border-color: var(--line-strong);
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .chip-accent {
+        color: var(--accent);
+        border-color: var(--accent-line);
+        background: var(--accent-dim);
+      }
+
+      /* ============================================================
+         6. APP SHELL SPECIMEN
+         ============================================================ */
+      .shell {
+        display: flex;
+        min-height: 620px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--r-surface);
+        overflow: hidden;
+        background: var(--bg);
+      }
+      .rail {
+        display: none;
+        flex-direction: column;
+        width: 236px;
+        flex: 0 0 236px;
+        padding: var(--s-4) var(--s-3);
+        background: var(--surface-1);
+        border-right: 1px solid var(--line);
+      }
+      .rail-brand {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        padding: var(--s-2) var(--s-2) var(--s-5);
+      }
+      .monogram {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        display: grid;
+        place-items: center;
+        background: var(--accent);
+        color: var(--accent-ink);
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 14px;
+        letter-spacing: -0.02em;
+        flex: none;
+      }
+      .rail-brand .name {
+        font-size: var(--fs-base);
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        line-height: 1.1;
+      }
+      .rail-brand .sub {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--ink-3);
+        margin-top: 2px;
+      }
+      .rail-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        flex: 1;
+      }
+      .rail-item {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        width: 100%;
+        padding: 9px 10px;
+        border: 1px solid transparent;
+        border-radius: var(--r-control);
+        background: transparent;
+        color: var(--ink-2);
+        font-size: var(--fs-sm);
+        font-weight: 500;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color var(--dur-hover) ease, color var(--dur-hover) ease,
+          border-color var(--dur-hover) ease;
+      }
+      .rail-item svg {
+        width: 18px;
+        height: 18px;
+        flex: none;
+        color: var(--ink-3);
+        transition: color var(--dur-hover) ease;
+      }
+      .rail-item .count {
+        margin-left: auto;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ink-3);
+      }
+      .rail-item[aria-current="page"] {
+        background: var(--accent-dim);
+        border-color: var(--accent-line);
+        color: var(--accent);
+      }
+      .rail-item[aria-current="page"] svg,
+      .rail-item[aria-current="page"] .count {
+        color: var(--accent);
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .rail-item:hover {
+          background: rgba(255, 255, 255, 0.04);
+          color: var(--ink);
+        }
+        .rail-item:hover svg {
+          color: var(--ink-2);
+        }
+      }
+      .rail-foot {
+        padding-top: var(--s-3);
+        border-top: 1px solid var(--line);
+        margin-top: var(--s-3);
+      }
+
+      .main-col {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: var(--s-4);
+        padding: var(--s-3) var(--s-4);
+        border-bottom: 1px solid var(--line);
+        background: var(--surface-1);
+      }
+      .topbar .screen-title {
+        font-size: var(--fs-sm);
+        font-weight: 600;
+      }
+      .topbar .spacer {
+        flex: 1;
+      }
+      .topbar .switches {
+        display: flex;
+        gap: var(--s-4);
+      }
+      .canvas {
+        flex: 1;
+        margin: var(--s-5);
+        border: 1px dashed var(--line-strong);
+        border-radius: var(--r-surface);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: var(--s-7);
+        gap: var(--s-2);
+        color: var(--ink-3);
+      }
+      .canvas strong {
+        color: var(--ink-2);
+        font-size: var(--fs-base);
+        font-weight: 600;
+      }
+
+      .bottombar {
+        display: flex;
+        justify-content: space-around;
+        gap: var(--s-1);
+        padding: var(--s-2) var(--s-3) calc(var(--s-2) + env(safe-area-inset-bottom));
+        border-top: 1px solid var(--line);
+        background: var(--surface-1);
+      }
+      .bottombar .rail-item {
+        flex-direction: column;
+        gap: 3px;
+        text-align: center;
+        font-size: 10.5px;
+        min-width: 56px;
+        padding: 6px 0;
+      }
+      .bottombar .rail-item .count {
+        margin: 0;
+      }
+
+      @media (min-width: 900px) {
+        .rail {
+          display: flex;
+        }
+        .bottombar {
+          display: none;
+        }
+      }
+
+      /* ============================================================
+         7. SPEC HELPERS (foundations display)
+         ============================================================ */
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: var(--s-3);
+      }
+      .swatch {
+        border: 1px solid var(--line);
+        border-radius: var(--r-control);
+        overflow: hidden;
+      }
+      .swatch .fill {
+        height: 64px;
+      }
+      .swatch .meta {
+        padding: var(--s-2) 10px;
+        border-top: 1px solid var(--line);
+      }
+      .swatch .meta .n {
+        font-size: var(--fs-xs);
+        font-weight: 600;
+      }
+      .swatch .meta .v {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--ink-3);
+      }
+
+      .type-row {
+        display: flex;
+        align-items: baseline;
+        gap: var(--s-4);
+        padding: var(--s-3) 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .type-row .tag {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--ink-3);
+        flex: none;
+        width: 84px;
+      }
+
+      .space-row {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        padding: 5px 0;
+      }
+      .space-row .bar {
+        height: 10px;
+        background: var(--accent-dim);
+        border: 1px solid var(--accent-line);
+        border-radius: 3px;
+      }
+      .space-row .tag {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--ink-3);
+        width: 54px;
+      }
+
+      .radius-row {
+        display: flex;
+        gap: var(--s-3);
+        flex-wrap: wrap;
+      }
+      .radius-demo {
+        width: 84px;
+        height: 64px;
+        background: var(--surface-2);
+        border: 1px solid var(--line-strong);
+        display: grid;
+        place-items: center;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--ink-3);
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        gap: var(--s-3);
+        flex-wrap: wrap;
+      }
+      .stack {
+        display: grid;
+        gap: var(--s-3);
+      }
+      .spec-note {
+        font-size: var(--fs-xs);
+        color: var(--ink-3);
+        margin-top: var(--s-2);
+      }
+
+      /* Data row primitive */
+      .datarow {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: var(--s-2) var(--s-4);
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .datarow:last-child {
+        border-bottom: 0;
+      }
+      .datarow .t {
+        grid-column: 1;
+        font-size: var(--fs-sm);
+        font-weight: 500;
+      }
+      .datarow .s {
+        grid-column: 1;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ink-3);
+      }
+      .datarow .v {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        align-self: center;
+        font-family: var(--font-mono);
+        font-size: var(--fs-md);
+        font-weight: 700;
+        color: var(--accent);
+      }
+
+      /* ============================================================
+         8. ENTRANCE (MOTION 4 — one load-in, staggered, no loops)
+         ============================================================ */
+      @media (prefers-reduced-motion: no-preference) {
+        .rise {
+          opacity: 1;
+          transform: translateY(0);
+          transition: opacity var(--dur-enter) var(--ease-out), transform var(--dur-enter) var(--ease-out);
+          transition-delay: var(--d, 0ms);
+        }
+        @starting-style {
+          .rise {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="doc">
+      <!-- ============================ Header ============================ -->
+      <header class="doc-head rise">
+        <div>
+          <p class="label">Design system · v3</p>
+          <h1>Cold Signal</h1>
+          <p>
+            Dark graphite base, one electric-lime accent, Space Grotesk for UI and JetBrains Mono for data.
+            No glassmorphism, no purple, no Inter. Dark theme is locked across the app.
+          </p>
+        </div>
+        <div class="doc-dials">
+          <span class="chip chip-neutral">variance 4</span>
+          <span class="chip chip-neutral">motion 4</span>
+          <span class="chip chip-neutral">density 6</span>
+        </div>
+      </header>
+
+      <!-- ============================ Shell specimen ============================ -->
+      <section class="block">
+        <header>
+          <h2>App shell</h2>
+          <span class="rule"></span>
+          <span class="label">specimen</span>
+        </header>
+
+        <div class="shell rise" style="--d: 40ms">
+          <!-- Left rail -->
+          <aside class="rail" aria-label="Primary">
+            <div class="rail-brand">
+              <div class="monogram">SS</div>
+              <div>
+                <div class="name">SmartStock</div>
+                <div class="sub">Oreo · UPM</div>
+              </div>
+            </div>
+
+            <nav class="rail-nav">
+              <button class="rail-item" aria-current="page">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                Chat
+              </button>
+              <button class="rail-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+                Plan
+                <span class="count">4</span>
+              </button>
+              <button class="rail-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7" /><path d="M17 21v-8" /><path d="M7 21v-8" /><path d="M7 3v5h10V3" /><path d="M9 3h6" /></svg>
+                Stock
+                <span class="count">6</span>
+              </button>
+              <button class="rail-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5z" /></svg>
+                Pro
+              </button>
+            </nav>
+
+            <div class="rail-foot">
+              <button class="btn btn-primary btn-block">Run agents</button>
+            </div>
+          </aside>
+
+          <!-- Main column -->
+          <div class="main-col">
+            <div class="topbar">
+              <span class="screen-title">Chat</span>
+              <span class="spacer"></span>
+              <div class="switches">
+                <label class="toggle"><input type="checkbox" /><span class="track"></span>Payday</label>
+                <label class="toggle"><input type="checkbox" /><span class="track"></span>Rain</label>
+              </div>
+            </div>
+
+            <div class="canvas">
+              <strong>Screen canvas</strong>
+              <span class="mono" style="font-size: 11px">Chat · Plan · Stock · Pro render here</span>
+            </div>
+
+            <!-- Mobile bottom nav -->
+            <nav class="bottombar" aria-label="Primary">
+              <button class="rail-item" aria-current="page">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                Chat
+              </button>
+              <button class="rail-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+                Plan
+              </button>
+              <button class="rail-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7" /><path d="M17 21v-8" /><path d="M7 21v-8" /><path d="M7 3v5h10V3" /><path d="M9 3h6" /></svg>
+                Stock
+              </button>
+              <button class="rail-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5z" /></svg>
+                Pro
+              </button>
+            </nav>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ Foundations ============================ -->
+      <section class="block">
+        <header>
+          <h2>Foundations</h2>
+          <span class="rule"></span>
+          <span class="label">tokens</span>
+        </header>
+
+        <div class="stack">
+          <!-- Colour -->
+          <div class="surface pad rise" style="--d: 0ms">
+            <p class="label" style="margin-bottom: 12px">Colour</p>
+            <div class="swatches">
+              <div class="swatch"><div class="fill" style="background: #0b0e12"></div><div class="meta"><div class="n">Background</div><div class="v">#0B0E12</div></div></div>
+              <div class="swatch"><div class="fill" style="background: #11151b"></div><div class="meta"><div class="n">Surface 1</div><div class="v">#11151B</div></div></div>
+              <div class="swatch"><div class="fill" style="background: #161b22"></div><div class="meta"><div class="n">Surface 2</div><div class="v">#161B22</div></div></div>
+              <div class="swatch"><div class="fill" style="background: #c6f24e"></div><div class="meta"><div class="n">Accent</div><div class="v">#C6F24E</div></div></div>
+              <div class="swatch"><div class="fill" style="background: #e8ebef"></div><div class="meta"><div class="n">Ink · 15.4:1</div><div class="v">#E8EBEF</div></div></div>
+              <div class="swatch"><div class="fill" style="background: #aeb6c2"></div><div class="meta"><div class="n">Ink 2 · 8.6:1</div><div class="v">#AEB6C2</div></div></div>
+              <div class="swatch"><div class="fill" style="background: #7c8794"></div><div class="meta"><div class="n">Ink 3 · 4.9:1</div><div class="v">#7C8794</div></div></div>
+              <div class="swatch"><div class="fill" style="background: #5eead4"></div><div class="meta"><div class="n">Status · ok</div><div class="v">#5EEAD4</div></div></div>
+              <div class="swatch"><div class="fill" style="background: #e6b455"></div><div class="meta"><div class="n">Status · warn</div><div class="v">#E6B455</div></div></div>
+              <div class="swatch"><div class="fill" style="background: #ff7a6b"></div><div class="meta"><div class="n">Status · risk</div><div class="v">#FF7A6B</div></div></div>
+            </div>
+            <p class="spec-note">
+              One accent only. Status colours are functional, never decorative. Ink 3 is the AA floor — do not lighten it.
+            </p>
+          </div>
+
+          <!-- Type -->
+          <div class="surface pad rise" style="--d: 40ms">
+            <p class="label" style="margin-bottom: 8px">Type</p>
+            <div class="type-row">
+              <span class="tag">display / 46</span>
+              <span style="font-size: var(--fs-3xl); font-weight: 700; letter-spacing: -0.03em; line-height: 1.05">Plan tomorrow.</span>
+            </div>
+            <div class="type-row">
+              <span class="tag">heading / 26</span>
+              <span style="font-size: var(--fs-xl); font-weight: 600; letter-spacing: -0.02em">Ranked actions</span>
+            </div>
+            <div class="type-row">
+              <span class="tag">title / 17</span>
+              <span style="font-size: var(--fs-md); font-weight: 600">Teh tarik — restock 40</span>
+            </div>
+            <div class="type-row">
+              <span class="tag">body / 15</span>
+              <span style="font-size: var(--fs-base); color: var(--ink-2); max-width: 62ch">
+                Stock is below expected demand, so the plan orders more before the morning rush.
+              </span>
+            </div>
+            <div class="type-row">
+              <span class="tag">mono label</span>
+              <span class="label">rm impact · today</span>
+            </div>
+            <div class="type-row" style="border-bottom: 0">
+              <span class="tag">mono number</span>
+              <span class="num" style="font-size: var(--fs-xl); color: var(--accent)">RM 152.16</span>
+            </div>
+            <p class="spec-note">
+              Space Grotesk for UI and prose · JetBrains Mono for labels, numbers and any value that sits in a column.
+            </p>
+          </div>
+
+          <!-- Space + radius (side by side on desktop) -->
+          <div class="grid-2">
+            <div class="surface pad rise" style="--d: 80ms">
+              <p class="label" style="margin-bottom: 12px">Space · 4px base</p>
+              <div class="space-row"><span class="tag">s-1</span><span class="bar" style="width: 4px"></span><span class="mono" style="font-size: 10.5px; color: var(--ink-3)">4</span></div>
+              <div class="space-row"><span class="tag">s-2</span><span class="bar" style="width: 8px"></span><span class="mono" style="font-size: 10.5px; color: var(--ink-3)">8</span></div>
+              <div class="space-row"><span class="tag">s-3</span><span class="bar" style="width: 12px"></span><span class="mono" style="font-size: 10.5px; color: var(--ink-3)">12</span></div>
+              <div class="space-row"><span class="tag">s-4</span><span class="bar" style="width: 16px"></span><span class="mono" style="font-size: 10.5px; color: var(--ink-3)">16</span></div>
+              <div class="space-row"><span class="tag">s-5</span><span class="bar" style="width: 20px"></span><span class="mono" style="font-size: 10.5px; color: var(--ink-3)">20</span></div>
+              <div class="space-row"><span class="tag">s-6</span><span class="bar" style="width: 24px"></span><span class="mono" style="font-size: 10.5px; color: var(--ink-3)">24</span></div>
+              <div class="space-row"><span class="tag">s-7</span><span class="bar" style="width: 32px"></span><span class="mono" style="font-size: 10.5px; color: var(--ink-3)">32</span></div>
+              <div class="space-row"><span class="tag">s-8</span><span class="bar" style="width: 40px"></span><span class="mono" style="font-size: 10.5px; color: var(--ink-3)">40</span></div>
+              <div class="space-row"><span class="tag">s-9</span><span class="bar" style="width: 56px"></span><span class="mono" style="font-size: 10.5px; color: var(--ink-3)">56</span></div>
+            </div>
+
+            <div class="surface pad rise" style="--d: 120ms">
+              <p class="label" style="margin-bottom: 12px">Radius · one family</p>
+              <div class="radius-row">
+                <div class="radius-demo" style="border-radius: var(--r-control)">10 control</div>
+                <div class="radius-demo" style="border-radius: var(--r-surface)">14 surface</div>
+                <div class="radius-demo" style="border-radius: var(--r-pill)">pill</div>
+              </div>
+              <p class="spec-note">
+                Documented rule: controls 10px · cards/panels 14px · toggles and status chips only are full-pill.
+                Nothing else is rounded, so the shape language stays consistent.
+              </p>
+            </div>
+          </div>
+
+          <!-- Elevation + motion -->
+          <div class="grid-2">
+            <div class="surface pad rise" style="--d: 160ms">
+              <p class="label" style="margin-bottom: 12px">Elevation</p>
+              <div class="row" style="align-items: stretch">
+                <div style="flex: 1; min-width: 120px">
+                  <div class="surface-quiet" style="height: 74px; box-shadow: var(--sh-1); border-radius: var(--r-control)"></div>
+                  <p class="spec-note"><span class="mono">sh-1</span> · resting card</p>
+                </div>
+                <div style="flex: 1; min-width: 120px">
+                  <div class="surface-quiet" style="height: 74px; box-shadow: var(--sh-2); border-radius: var(--r-control)"></div>
+                  <p class="spec-note"><span class="mono">sh-2</span> · raised / overlay</p>
+                </div>
+                <div style="flex: 1; min-width: 120px">
+                  <div style="height: 74px; background: var(--accent); box-shadow: var(--sh-accent); border-radius: var(--r-control)"></div>
+                  <p class="spec-note"><span class="mono">sh-accent</span> · primary action</p>
+                </div>
+              </div>
+              <p class="spec-note">Shadows are dark-tinted, never pure black, and always paired with a 1px border.</p>
+            </div>
+
+            <div class="surface pad rise" style="--d: 200ms">
+              <p class="label" style="margin-bottom: 12px">Motion</p>
+              <div class="datarow"><span class="t">Press</span><span class="s">translateY(1px)</span><span class="v" style="color: var(--ink); font-size: var(--fs-sm)">130ms · ease-out</span></div>
+              <div class="datarow"><span class="t">Hover / colour</span><span class="s">border · bg · text</span><span class="v" style="color: var(--ink); font-size: var(--fs-sm)">180ms · ease</span></div>
+              <div class="datarow"><span class="t">Entrance</span><span class="s">opacity + translateY</span><span class="v" style="color: var(--ink); font-size: var(--fs-sm)">260ms · ease-out</span></div>
+              <p class="spec-note">
+                Curve <span class="mono">cubic-bezier(0.16, 1, 0.3, 1)</span>. Transform and opacity only. No infinite loops,
+                no scroll listeners — motion has to earn its place.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ Components ============================ -->
+      <section class="block">
+        <header>
+          <h2>Components</h2>
+          <span class="rule"></span>
+          <span class="label">primitives</span>
+        </header>
+
+        <div class="grid-2">
+          <!-- Buttons -->
+          <div class="surface pad rise" style="--d: 0ms">
+            <p class="label" style="margin-bottom: 12px">Buttons</p>
+            <div class="row" style="margin-bottom: 12px">
+              <button class="btn btn-primary">Run agents</button>
+              <button class="btn btn-secondary">Review plan</button>
+              <button class="btn btn-ghost">Skip</button>
+            </div>
+            <div class="row">
+              <button class="btn btn-primary btn-sm">Order</button>
+              <button class="btn btn-danger btn-sm">Discard</button>
+              <button class="btn btn-secondary btn-sm" disabled style="opacity: 0.45; cursor: not-allowed">Disabled</button>
+            </div>
+            <p class="spec-note">One primary per view. Labels stay on one line; press drops 1px, it never scales.</p>
+          </div>
+
+          <!-- Chips -->
+          <div class="surface pad rise" style="--d: 40ms">
+            <p class="label" style="margin-bottom: 12px">Status chips</p>
+            <div class="row" style="margin-bottom: 4px">
+              <span class="chip chip-risk"><span class="dot"></span>stockout</span>
+              <span class="chip chip-warn"><span class="dot"></span>expiry</span>
+              <span class="chip chip-ok"><span class="dot"></span>ok</span>
+            </div>
+            <div class="row">
+              <span class="chip chip-accent">validated</span>
+              <span class="chip chip-neutral">sample data</span>
+            </div>
+            <p class="spec-note">Mono, uppercase-free, dot-led. The dot carries meaning; colour reinforces it.</p>
+          </div>
+
+          <!-- Inputs -->
+          <div class="surface pad rise" style="--d: 80ms">
+            <p class="label" style="margin-bottom: 12px">Inputs</p>
+            <div class="field-group" style="margin-bottom: 16px">
+              <label class="field-label" for="f1">Supplier name</label>
+              <input class="field" id="f1" placeholder="e.g. Makcik Kitchen" />
+              <span class="field-hint">Used on the order sheet.</span>
+            </div>
+            <div class="field-group">
+              <label class="field-label" for="f2">Daily budget (RM)</label>
+              <input class="field is-error" id="f2" value="999" />
+              <span class="field-error">Above the RM250 cap for this store.</span>
+            </div>
+            <p class="spec-note">Label above, helper below, error below that. Placeholder is never the label.</p>
+          </div>
+
+          <!-- Toggle + segmented -->
+          <div class="surface pad rise" style="--d: 120ms">
+            <p class="label" style="margin-bottom: 12px">Toggle &amp; segmented</p>
+            <div class="stack" style="gap: 16px">
+              <label class="toggle"><input type="checkbox" checked /><span class="track"></span>Payday week</label>
+              <label class="toggle"><input type="checkbox" /><span class="track"></span>Rain</label>
+              <div class="seg" role="group" aria-label="Plan view">
+                <button aria-pressed="true">By impact</button>
+                <button aria-pressed="false">By item</button>
+                <button aria-pressed="false">By supplier</button>
+              </div>
+            </div>
+            <p class="spec-note">Toggle knob and segmented selection are the only pill shapes besides status chips.</p>
+          </div>
+        </div>
+
+        <!-- Data row -->
+        <div class="surface pad rise" style="--d: 160ms; margin-top: var(--s-4)">
+          <p class="label" style="margin-bottom: 4px">Data row · ranked action</p>
+          <div class="datarow">
+            <span class="t">Teh tarik</span>
+            <span class="s">ORDER · 40 UNITS · BEVERAGE SUPPLY CO.</span>
+            <span class="v">RM 79.20</span>
+          </div>
+          <div class="datarow">
+            <span class="t">Kuih lapis</span>
+            <span class="s">ORDER · 30 UNITS · KUIH EXPRESS</span>
+            <span class="v">RM 28.80</span>
+          </div>
+          <div class="datarow">
+            <span class="t">Sandwich tuna</span>
+            <span class="s">MARKDOWN 30% · EXPIRES TOMORROW 18:00</span>
+            <span class="v">RM 20.16</span>
+          </div>
+          <p class="spec-note">
+            Money sits in a mono column, right-aligned, accent-tinted. Sub-line is mono, uppercase, muted.
+          </p>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>

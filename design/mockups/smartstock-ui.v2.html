@@ -1,0 +1,1368 @@
+<!doctype html>
+<!--
+  SmartStock — UI rebuild v2
+  Screen: Chat  ·  Pass 1 (structure + craft) + Pass 2 (motion)
+  Built from scratch against Emil Kowalski's design-engineering principles.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>SmartStock — Chat (v2)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ============================================================
+         Tokens
+         ============================================================ */
+      :root {
+        /* Identity (unchanged) */
+        --bg: #fff5ee;
+        --ink: #10162f;
+        --ink-2: #374151;
+        --muted: #6b7280;
+        --muted-soft: #6b7280; /* AA-passing small text (was #9aa1ad ≈ 2.6:1) */
+        --gold: #f7c948;
+        --gold-strong: #e6b000;
+        --gold-soft: #fff3cf;
+        --sky: #e6f7ff;
+        --sky-line: #b9e6ff;
+        --fuchsia: #d946ef;
+        --violet: #8b5cf6;
+
+        /* Surfaces — layered, semi-transparent, never a hard solid border */
+        --surface: rgba(255, 255, 255, 0.72);
+        --surface-2: rgba(255, 255, 255, 0.9);
+        --line: rgba(16, 22, 47, 0.08);
+        --line-soft: rgba(16, 22, 47, 0.05);
+
+        /* Elevation — ambient + key, low alpha */
+        --sh-1: 0 1px 2px rgba(16, 22, 47, 0.04), 0 8px 24px -14px rgba(16, 22, 47, 0.16);
+        --sh-2: 0 1px 2px rgba(16, 22, 47, 0.05), 0 16px 40px -18px rgba(16, 22, 47, 0.22);
+        --sh-gold: 0 1px 2px rgba(230, 176, 0, 0.2), 0 8px 20px -10px rgba(230, 176, 0, 0.45);
+        --sh-premium: 0 1px 2px rgba(217, 70, 239, 0.15), 0 18px 44px -18px rgba(217, 70, 239, 0.4);
+
+        /* Motion tokens — strong custom curves, never the browser defaults */
+        --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+        --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+        --dur-press: 140ms;
+        --dur-hover: 180ms;
+        --dur-enter: 240ms;
+
+        --radius: 18px;
+        --radius-sm: 12px;
+        --radius-pill: 999px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+      }
+
+      body {
+        min-height: 100dvh;
+        background-color: var(--bg);
+        background-image: radial-gradient(ellipse 60% 45% at 18% -5%, rgba(247, 201, 72, 0.16), transparent 70%),
+          radial-gradient(ellipse 55% 45% at 92% 108%, rgba(217, 70, 239, 0.1), transparent 70%);
+        background-attachment: fixed;
+        color: var(--ink);
+        font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+        font-size: 15px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+
+      .tnum {
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum" 1;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      /* ============================================================
+         Focus — visible only for keyboard users
+         ============================================================ */
+      :focus-visible {
+        outline: 2px solid var(--gold-strong);
+        outline-offset: 2px;
+      }
+
+      /* ============================================================
+         Shell
+         ============================================================ */
+      .app {
+        display: flex;
+        min-height: 100dvh;
+      }
+
+      .sidebar {
+        display: none;
+        flex-direction: column;
+        width: 264px;
+        flex: 0 0 264px;
+        position: sticky;
+        top: 0;
+        height: 100dvh;
+        padding: 22px 16px 16px;
+        background: rgba(255, 255, 255, 0.62);
+        backdrop-filter: blur(24px) saturate(150%);
+        border-right: 1px solid rgba(255, 255, 255, 0.7);
+      }
+
+      .main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ---------- Brand ---------- */
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 4px 8px 20px;
+      }
+
+      .brand-mark {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(150deg, var(--gold), var(--gold-strong));
+        border: 2px solid #fff;
+        box-shadow: var(--sh-gold);
+        color: #fff;
+        flex: none;
+      }
+
+      .brand-name {
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+
+      .brand-sub {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 3px;
+        line-height: 1;
+      }
+
+      /* ---------- Nav ---------- */
+      .nav {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 11px 12px;
+        border: 0;
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: var(--ink-2);
+        font: inherit;
+        font-weight: 600;
+        font-size: 14px;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color var(--dur-hover) ease, color var(--dur-hover) ease;
+      }
+
+      .nav-item svg {
+        width: 19px;
+        height: 19px;
+        color: var(--muted);
+        transition: color var(--dur-hover) ease;
+      }
+
+      .nav-item[aria-current="page"] {
+        background: #fff;
+        color: var(--ink);
+        box-shadow: var(--sh-1);
+      }
+
+      .nav-item[aria-current="page"] svg {
+        color: var(--gold-strong);
+      }
+
+      .nav-item .tag {
+        margin-left: auto;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: var(--fuchsia);
+        background: rgba(217, 70, 239, 0.1);
+        padding: 3px 8px;
+        border-radius: var(--radius-pill);
+      }
+
+      @media (hover: hover) and (pointer: fine) {
+        .nav-item:hover {
+          background: rgba(255, 255, 255, 0.7);
+          color: var(--ink);
+        }
+        .nav-item:hover svg {
+          color: var(--ink-2);
+        }
+      }
+
+      /* ---------- Sidebar cards ---------- */
+      .side-spacer {
+        flex: 1;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid rgba(255, 255, 255, 0.65);
+        border-radius: var(--radius);
+        box-shadow: var(--sh-1);
+      }
+
+      .store-card {
+        padding: 14px;
+        margin-bottom: 12px;
+      }
+
+      .store-row {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 12px;
+      }
+
+      .store-ico {
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        display: grid;
+        place-items: center;
+        background: var(--sky);
+        color: var(--ink);
+        flex: none;
+      }
+
+      .store-ico svg {
+        width: 19px;
+        height: 19px;
+      }
+
+      .store-name {
+        font-size: 13.5px;
+        font-weight: 700;
+      }
+
+      .store-pin {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      /* ---------- Buttons ---------- */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 1px solid transparent;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-hover) ease,
+          border-color var(--dur-hover) ease, color var(--dur-hover) ease, box-shadow var(--dur-hover) ease;
+      }
+
+      .btn:active {
+        transform: scale(0.97);
+      }
+
+      .btn svg {
+        width: 16px;
+        height: 16px;
+        flex: none;
+      }
+
+      .btn-ghost {
+        width: 100%;
+        padding: 9px 14px;
+        border-radius: var(--radius-pill);
+        background: #fff;
+        border-color: var(--line);
+        color: var(--ink-2);
+        font-size: 12px;
+      }
+
+      .btn-gold {
+        padding: 11px 20px;
+        border-radius: var(--radius-pill);
+        background: var(--gold);
+        color: var(--ink);
+        font-size: 14px;
+        box-shadow: var(--sh-gold);
+      }
+
+      .btn-block {
+        width: 100%;
+      }
+
+      /* ---------- Pro upsell (sidebar) ---------- */
+      .pro-card {
+        position: relative;
+        overflow: hidden;
+        padding: 15px;
+        border-radius: var(--radius);
+        border: 1px solid transparent;
+        background: linear-gradient(145deg, #d946ef 0%, #a855f7 55%, #8b5cf6 100%);
+        color: #fff;
+        text-align: left;
+        cursor: pointer;
+        width: 100%;
+        box-shadow: var(--sh-premium);
+        transition: transform var(--dur-press) var(--ease-out), box-shadow var(--dur-hover) ease;
+      }
+
+      .pro-card:active {
+        transform: scale(0.98);
+      }
+
+      .pro-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1.4px);
+        background-size: 16px 16px;
+        opacity: 0.5;
+        pointer-events: none;
+      }
+
+      .pro-card svg {
+        width: 18px;
+        height: 18px;
+        margin-bottom: 8px;
+        color: #fbd3ff;
+      }
+
+      .pro-title {
+        font-size: 13.5px;
+        font-weight: 700;
+      }
+
+      .pro-sub {
+        font-size: 11.5px;
+        color: rgba(255, 255, 255, 0.82);
+        margin-top: 2px;
+      }
+
+      .run-wrap {
+        padding: 14px 8px 4px;
+        border-top: 1px solid var(--line-soft);
+        margin-top: 14px;
+      }
+
+      /* ---------- Mobile header ---------- */
+      .m-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 0 18px;
+        height: 62px;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(24px) saturate(150%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+      }
+
+      .m-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .icon-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-sm);
+        display: grid;
+        place-items: center;
+        background: #fff;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        cursor: pointer;
+        transition: transform var(--dur-press) var(--ease-out), color var(--dur-hover) ease,
+          border-color var(--dur-hover) ease;
+      }
+
+      .icon-btn:active {
+        transform: scale(0.94);
+      }
+
+      .icon-btn svg {
+        width: 19px;
+        height: 19px;
+      }
+
+      /* ---------- Context bar ---------- */
+      .context-bar {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+        background: rgba(255, 255, 255, 0.45);
+        backdrop-filter: blur(16px);
+      }
+
+      .context-inner {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 11px 20px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .context-inner::-webkit-scrollbar {
+        display: none;
+      }
+
+      .context-label {
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--muted-soft);
+        flex: none;
+      }
+
+      .switch {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        flex: none;
+        user-select: none;
+      }
+
+      .switch-track {
+        width: 36px;
+        height: 20px;
+        border-radius: var(--radius-pill);
+        background: rgba(16, 22, 47, 0.16);
+        position: relative;
+        transition: background-color var(--dur-hover) var(--ease-out);
+      }
+
+      .switch-track::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(16, 22, 47, 0.25);
+        transition: transform var(--dur-hover) var(--ease-out);
+      }
+
+      .switch input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .switch input:checked + .switch-track {
+        background: var(--gold-strong);
+      }
+
+      .switch input:checked + .switch-track::after {
+        transform: translateX(16px);
+      }
+
+      .switch input:focus-visible + .switch-track {
+        outline: 2px solid var(--gold-strong);
+        outline-offset: 2px;
+      }
+
+      .switch-text {
+        font-size: 13.5px;
+        color: var(--ink-2);
+        font-weight: 500;
+      }
+
+      .context-date {
+        margin-left: auto;
+        font-size: 12px;
+        color: var(--muted-soft);
+        flex: none;
+      }
+
+      /* ---------- Content ---------- */
+      .content {
+        flex: 1;
+        width: 100%;
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 16px 20px 96px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ============================================================
+         Chat screen
+         ============================================================ */
+      .chat {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        gap: 12px;
+      }
+
+      .collapse-row {
+        display: flex;
+        justify-content: center;
+        margin-top: -2px;
+      }
+
+      .collapse-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border: 0;
+        border-radius: var(--radius-pill);
+        background: transparent;
+        color: var(--muted);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color var(--dur-hover) ease, color var(--dur-hover) ease;
+      }
+
+      .collapse-btn svg {
+        width: 14px;
+        height: 14px;
+        transition: transform var(--dur-enter) var(--ease-out);
+      }
+
+      .collapse-btn[aria-expanded="false"] svg {
+        transform: rotate(180deg);
+      }
+
+      @media (hover: hover) and (pointer: fine) {
+        .collapse-btn:hover {
+          background: rgba(255, 255, 255, 0.7);
+          color: var(--gold-strong);
+        }
+      }
+
+      /* Intro cards wrapper (collapsible) */
+      .intro {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out);
+      }
+
+      .intro.is-hidden {
+        opacity: 0;
+        transform: translateY(-6px);
+      }
+
+      /* ---------- Hero ---------- */
+      .hero {
+        position: relative;
+        overflow: hidden;
+        padding: 22px 24px;
+        border-radius: var(--radius);
+        background: var(--surface-2);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        box-shadow: var(--sh-1);
+      }
+
+      .hero-glow {
+        position: absolute;
+        top: -70px;
+        right: -50px;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(247, 201, 72, 0.35), transparent 70%);
+        pointer-events: none;
+      }
+
+      .hero-inner {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .eyebrow {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted-soft);
+      }
+
+      .hero h1 {
+        font-size: clamp(24px, 3.4vw, 34px);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.08;
+        margin-top: 10px;
+        max-width: 17ch;
+      }
+
+      .hero p {
+        font-size: 14px;
+        color: var(--muted);
+        margin-top: 10px;
+        max-width: 46ch;
+      }
+
+      .hero-mark {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(150deg, var(--gold), var(--gold-strong));
+        border: 2px solid #fff;
+        box-shadow: var(--sh-gold);
+        color: #fff;
+        flex: none;
+      }
+
+      .hero-mark svg {
+        width: 28px;
+        height: 28px;
+      }
+
+      /* ---------- Store + Pro, merged two-up row ---------- */
+      .duo {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      @media (min-width: 720px) {
+        .duo {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      .tile {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 13px 16px;
+        min-height: 66px;
+        border-radius: var(--radius);
+        background: var(--surface);
+        border: 1px solid rgba(255, 255, 255, 0.65);
+        box-shadow: var(--sh-1);
+      }
+
+      .tile-ico {
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        display: grid;
+        place-items: center;
+        flex: none;
+      }
+
+      .tile-ico svg {
+        width: 19px;
+        height: 19px;
+      }
+
+      .store-tile .tile-ico {
+        background: var(--sky);
+        color: var(--ink);
+      }
+
+      .tile-text {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .tile-title {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .tile-sub {
+        font-size: 12px;
+        color: var(--muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .pro-tile {
+        cursor: pointer;
+        text-align: left;
+        font: inherit;
+        background: linear-gradient(120deg, rgba(255, 255, 255, 0.95), rgba(253, 242, 255, 0.9));
+        border-color: rgba(217, 70, 239, 0.2);
+        transition: transform var(--dur-press) var(--ease-out), border-color var(--dur-hover) ease,
+          box-shadow var(--dur-hover) ease;
+      }
+
+      .pro-tile:active {
+        transform: scale(0.99);
+      }
+
+      .pro-tile .tile-ico {
+        border-radius: 50%;
+        background: linear-gradient(150deg, var(--fuchsia), var(--violet));
+        color: #fff;
+      }
+
+      .pill {
+        flex: none;
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--fuchsia);
+        background: rgba(217, 70, 239, 0.12);
+        padding: 5px 12px;
+        border-radius: var(--radius-pill);
+      }
+
+      @media (hover: hover) and (pointer: fine) {
+        .pro-tile:hover {
+          border-color: rgba(217, 70, 239, 0.4);
+        }
+        .tile .btn-ghost:hover {
+          border-color: rgba(230, 176, 0, 0.55);
+          color: var(--gold-strong);
+        }
+      }
+
+      /* ---------- Conversation ---------- */
+      .thread {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        overflow-y: auto;
+        padding: 6px 2px 4px;
+        min-height: 200px;
+      }
+
+      .msg {
+        display: flex;
+      }
+
+      .msg.user {
+        justify-content: flex-end;
+      }
+
+      .bubble {
+        max-width: 78%;
+        padding: 11px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .bubble.bot {
+        background: var(--surface-2);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        color: var(--ink);
+        border-bottom-left-radius: 6px;
+        box-shadow: var(--sh-1);
+      }
+
+      .bubble.user {
+        background: linear-gradient(150deg, #ffd75e, var(--gold-strong));
+        color: var(--ink);
+        font-weight: 600;
+        border-bottom-right-radius: 6px;
+        box-shadow: var(--sh-gold);
+      }
+
+      /* ---------- Agent run log (condensed to one block) ---------- */
+      .runlog {
+        align-self: flex-start;
+        width: min(640px, 100%);
+        padding: 12px 16px 13px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.55);
+        border: 1px solid var(--line-soft);
+      }
+
+      .runlog-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: var(--muted-soft);
+      }
+
+      .runlog-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--gold);
+        box-shadow: 0 0 0 3px rgba(247, 201, 72, 0.22);
+        flex: none;
+      }
+
+      .runlog-steps {
+        margin: 9px 0 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .runlog-steps li {
+        display: flex;
+        gap: 10px;
+        font-size: 12.5px;
+        line-height: 1.4;
+        color: var(--muted);
+      }
+
+      .runlog-steps .agent {
+        flex: none;
+        width: 76px;
+        font-weight: 700;
+        color: var(--gold-strong);
+      }
+
+      /* ---------- Plan summary card ---------- */
+      .summary {
+        align-self: flex-start;
+        width: min(560px, 100%);
+        padding: 16px 18px;
+        border-radius: var(--radius);
+        background: var(--surface-2);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        border-left: 3px solid var(--gold);
+        box-shadow: var(--sh-1);
+      }
+
+      .summary-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .summary h3 {
+        font-size: 14.5px;
+        font-weight: 700;
+      }
+
+      .summary-line {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+
+      .summary-line strong {
+        color: var(--ink-2);
+        font-weight: 700;
+      }
+
+      .summary .btn-gold {
+        font-size: 12.5px;
+        padding: 8px 14px;
+        flex: none;
+      }
+
+      /* ---------- Suggestions ---------- */
+      .suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chip {
+        padding: 7px 14px;
+        border-radius: var(--radius-pill);
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid var(--line);
+        color: var(--ink-2);
+        font: inherit;
+        font-size: 12.5px;
+        font-weight: 500;
+        cursor: pointer;
+        box-shadow: var(--sh-1);
+        /* opacity carries the entrance (delayed via --d); transform stays the fast press */
+        transition: transform var(--dur-press) var(--ease-out), border-color var(--dur-hover) ease,
+          color var(--dur-hover) ease, opacity var(--dur-enter) var(--ease-out) var(--d, 0ms);
+      }
+
+      .chip:active {
+        transform: scale(0.97);
+      }
+
+      @media (hover: hover) and (pointer: fine) {
+        .chip:hover {
+          border-color: rgba(230, 176, 0, 0.55);
+          color: var(--gold-strong);
+        }
+      }
+
+      /* ---------- Composer ---------- */
+      .composer {
+        display: flex;
+        gap: 8px;
+        padding-top: 4px;
+      }
+
+      .field {
+        flex: 1;
+        min-width: 0;
+        padding: 13px 18px;
+        border-radius: var(--radius-pill);
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid var(--line);
+        color: var(--ink);
+        font: inherit;
+        font-size: 14px;
+        transition: border-color var(--dur-hover) ease, box-shadow var(--dur-hover) ease;
+      }
+
+      .field::placeholder {
+        color: var(--muted-soft);
+      }
+
+      .field:focus {
+        outline: none;
+        border-color: rgba(230, 176, 0, 0.6);
+        box-shadow: 0 0 0 3px rgba(247, 201, 72, 0.22);
+      }
+
+      /* ---------- Mobile bottom nav ---------- */
+      .bottom-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 30;
+        display: flex;
+        justify-content: space-around;
+        gap: 4px;
+        padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(24px) saturate(150%);
+        border-top: 1px solid rgba(255, 255, 255, 0.7);
+      }
+
+      .bottom-nav .nav-item {
+        flex-direction: column;
+        gap: 3px;
+        padding: 6px 0;
+        min-width: 60px;
+        font-size: 10.5px;
+        text-align: center;
+        color: var(--muted);
+      }
+
+      .bottom-nav .nav-item svg {
+        width: 21px;
+        height: 21px;
+      }
+
+      .bottom-nav .nav-item[aria-current="page"] {
+        background: var(--gold-soft);
+        color: var(--gold-strong);
+        box-shadow: none;
+      }
+
+      .bottom-nav .nav-item[aria-current="page"] svg {
+        color: var(--gold-strong);
+      }
+
+      /* ============================================================
+         Motion — entrance choreography
+         Runs once on load, staggered. Content is never blocked.
+         Reduced-motion users get the final state immediately.
+         ============================================================ */
+      @media (prefers-reduced-motion: no-preference) {
+        .enter {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+          transition: opacity var(--dur-enter) var(--ease-out), transform var(--dur-enter) var(--ease-out);
+          transition-delay: var(--d, 0ms);
+        }
+
+        @starting-style {
+          .enter {
+            opacity: 0;
+            transform: translateY(10px) scale(0.99);
+          }
+          .chip {
+            opacity: 0;
+          }
+        }
+      }
+
+      /* ============================================================
+         Responsive
+         ============================================================ */
+      @media (min-width: 1024px) {
+        .sidebar {
+          display: flex;
+        }
+        .m-header {
+          display: none;
+        }
+        .bottom-nav {
+          display: none;
+        }
+        .content {
+          padding-bottom: 24px;
+        }
+        .chat {
+          min-height: calc(100dvh - 150px);
+        }
+      }
+
+      @media (max-width: 1023px) {
+        .context-date {
+          display: none;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .hero {
+          padding: 18px;
+        }
+        .hero-mark {
+          width: 48px;
+          height: 48px;
+        }
+        .hero-mark svg {
+          width: 22px;
+          height: 22px;
+        }
+        .hero p {
+          font-size: 13px;
+        }
+        .bubble {
+          max-width: 88%;
+        }
+        .summary-top {
+          flex-direction: column;
+        }
+        .summary .btn-gold {
+          width: 100%;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <!-- ============================ Sidebar ============================ -->
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+              <path d="M17,8C8,10,5.9,16.17,3.82,21.34L5.71,22l1-2.3A4.49,4.49,0,0,0,8,20C19,20,22,3,22,3,21,5,14,5.25,9,6.25S2,11.5,2,13.5a6.22,6.22,0,0,0,1.75,3.75C7,8,17,8,17,8Z" />
+            </svg>
+          </div>
+          <div>
+            <div class="brand-name">SmartStock</div>
+            <div class="brand-sub">Oreo · UPM</div>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="Primary">
+          <button class="nav-item" aria-current="page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+            Chat
+          </button>
+          <button class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+            Plan
+          </button>
+          <button class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7" /><path d="M17 21v-8" /><path d="M7 21v-8" /><path d="M7 3v5h10V3" /><path d="M9 3h6" /></svg>
+            Stock
+          </button>
+          <button class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L14.5 8.5L20 11L14.5 13.5L12 19L9.5 13.5L4 11L9.5 8.5L12 3Z" /><path d="M19 3v4" /><path d="M17 5h4" /><path d="M19 17v4" /><path d="M17 19h4" /></svg>
+            Pro
+            <span class="tag">NEW</span>
+          </button>
+        </nav>
+
+        <div class="side-spacer"></div>
+
+        <div class="card store-card">
+          <div class="store-row">
+            <div class="store-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-7" /><path d="M5 10h14" /><path d="M16 10V6a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v4" /><circle cx="12" cy="10" r="2" /></svg>
+            </div>
+            <div>
+              <div class="store-name">Oreo · UPM</div>
+              <div class="store-pin">Store PIN: DEMO-UPM-001</div>
+            </div>
+          </div>
+          <button class="btn btn-ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+            Upload sales data
+          </button>
+        </div>
+
+        <button class="pro-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L14.5 8.5L20 11L14.5 13.5L12 19L9.5 13.5L4 11L9.5 8.5L12 3Z" /><path d="M19 3v4" /><path d="M17 5h4" /><path d="M19 17v4" /><path d="M17 19h4" /></svg>
+          <div class="pro-title">Try Pro free</div>
+          <div class="pro-sub">Unlock agents, proof &amp; alerts.</div>
+        </button>
+
+        <div class="run-wrap">
+          <button class="btn btn-gold btn-block">Run agents</button>
+        </div>
+      </aside>
+
+      <!-- ============================ Main ============================ -->
+      <div class="main">
+        <!-- Mobile header -->
+        <header class="m-header">
+          <div class="brand" style="padding: 0">
+            <div class="brand-mark" style="width: 38px; height: 38px">
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true">
+                <path d="M17,8C8,10,5.9,16.17,3.82,21.34L5.71,22l1-2.3A4.49,4.49,0,0,0,8,20C19,20,22,3,22,3,21,5,14,5.25,9,6.25S2,11.5,2,13.5a6.22,6.22,0,0,0,1.75,3.75C7,8,17,8,17,8Z" />
+              </svg>
+            </div>
+            <div>
+              <div class="brand-name" style="font-size: 16px">SmartStock</div>
+              <div class="brand-sub">Oreo · UPM</div>
+            </div>
+          </div>
+          <div class="m-actions">
+            <button class="icon-btn" aria-label="Upload data">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+            </button>
+            <button class="btn btn-gold" style="font-size: 13px; padding: 9px 16px">Run agents</button>
+          </div>
+        </header>
+
+        <!-- Context bar -->
+        <div class="context-bar">
+          <div class="context-inner">
+            <span class="context-label">Context</span>
+            <label class="switch">
+              <input type="checkbox" />
+              <span class="switch-track"></span>
+              <span class="switch-text">Payday week</span>
+            </label>
+            <label class="switch">
+              <input type="checkbox" />
+              <span class="switch-track"></span>
+              <span class="switch-text">Rain</span>
+            </label>
+            <span class="context-date">Tomorrow · Monday, 12 Oct</span>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <main class="content">
+          <section class="chat" aria-label="Chat">
+            <div class="collapse-row">
+              <button class="collapse-btn" id="cardsToggle" aria-expanded="true" aria-controls="intro">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
+                <span>Hide cards</span>
+              </button>
+            </div>
+
+            <div class="intro" id="intro">
+              <!-- Hero -->
+              <div class="hero enter" style="--d: 0ms">
+                <div class="hero-glow"></div>
+                <div class="hero-inner">
+                  <div>
+                    <div class="eyebrow">SmartStock</div>
+                    <h1>Tomorrow's plan, one prompt away.</h1>
+                    <p>Restock, markdown and supplier message — ranked by how much money each action saves.</p>
+                  </div>
+                  <div class="hero-mark">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M17,8C8,10,5.9,16.17,3.82,21.34L5.71,22l1-2.3A4.49,4.49,0,0,0,8,20C19,20,22,3,22,3,21,5,14,5.25,9,6.25S2,11.5,2,13.5a6.22,6.22,0,0,0,1.75,3.75C7,8,17,8,17,8Z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Store + Pro, merged two-up row -->
+              <div class="duo enter" style="--d: 40ms">
+                <div class="tile store-tile">
+                  <div class="tile-ico">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-7" /><path d="M5 10h14" /><path d="M16 10V6a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v4" /><circle cx="12" cy="10" r="2" /></svg>
+                  </div>
+                  <div class="tile-text">
+                    <div class="tile-title">Oreo · UPM</div>
+                    <div class="tile-sub">PIN: DEMO-UPM-001 · Sample data loaded</div>
+                  </div>
+                  <button class="btn btn-ghost" style="width: auto">Upload</button>
+                </div>
+
+                <button class="tile pro-tile">
+                  <div class="tile-ico">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L14.5 8.5L20 11L14.5 13.5L12 19L9.5 13.5L4 11L9.5 8.5L12 3Z" /><path d="M19 3v4" /><path d="M17 5h4" /><path d="M19 17v4" /><path d="M17 19h4" /></svg>
+                  </div>
+                  <div class="tile-text">
+                    <div class="tile-title">Try Pro free for 14 days</div>
+                    <div class="tile-sub">Agents, expiry markdowns &amp; savings proof.</div>
+                  </div>
+                  <span class="pill">Upgrade</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Conversation -->
+            <div class="thread">
+              <div class="msg enter" style="--d: 80ms">
+                <div class="bubble bot">Morning. Tell me what you need for tomorrow — or tap a suggestion below.</div>
+              </div>
+
+              <div class="msg enter" style="--d: 120ms">
+                <div class="runlog">
+                  <div class="runlog-head"><span class="runlog-dot"></span> Run trace · 4 agents</div>
+                  <ul class="runlog-steps">
+                    <li><span class="agent">Planner</span> Goal received. Context: payday=false, rain=false.</li>
+                    <li><span class="agent">Demand</span> Forecast all 6 items from same-weekday history.</li>
+                    <li><span class="agent">Expiry</span> Sandwich tuna flagged for a 30% markdown.</li>
+                    <li><span class="agent">Validator</span> Plan approved. Deliverables ready.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="msg enter" style="--d: 160ms">
+                <div class="bubble bot">Plan ready. 4 actions need your attention today — <strong class="tnum">RM152.16</strong> total impact.</div>
+              </div>
+
+              <div class="summary enter" style="--d: 200ms">
+                <div class="summary-top">
+                  <div>
+                    <h3>Plan summary</h3>
+                    <div class="summary-line">4 actions · <strong>3</strong> restock · <strong>1</strong> markdown</div>
+                    <div class="summary-line">Backtest saves <strong>62%</strong> vs baseline.</div>
+                  </div>
+                  <button class="btn btn-gold">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+                    View plan
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Suggestions -->
+            <div class="suggestions">
+              <button class="chip" style="--d: 240ms">Prepare the plan</button>
+              <button class="chip" style="--d: 280ms">What is at risk?</button>
+              <button class="chip" style="--d: 320ms">Show discounts</button>
+              <button class="chip" style="--d: 360ms">Savings vs baseline</button>
+            </div>
+
+            <!-- Composer -->
+            <div class="composer enter" style="--d: 400ms">
+              <input class="field" type="text" placeholder="Ask about tomorrow's plan..." />
+              <button class="btn btn-gold">Send</button>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <!-- Mobile bottom nav -->
+    <nav class="bottom-nav" aria-label="Primary">
+      <button class="nav-item" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+        Chat
+      </button>
+      <button class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+        Plan
+      </button>
+      <button class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7" /><path d="M17 21v-8" /><path d="M7 21v-8" /><path d="M7 3v5h10V3" /><path d="M9 3h6" /></svg>
+        Stock
+      </button>
+      <button class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L14.5 8.5L20 11L14.5 13.5L12 19L9.5 13.5L4 11L9.5 8.5L12 3Z" /><path d="M19 3v4" /><path d="M17 5h4" /><path d="M19 17v4" /><path d="M17 19h4" /></svg>
+        Pro
+      </button>
+    </nav>
+
+    <script>
+      // Collapse/expand intro cards. Content stays in the DOM; only visibility toggles.
+      (function () {
+        var btn = document.getElementById("cardsToggle");
+        var intro = document.getElementById("intro");
+        var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        btn.addEventListener("click", function () {
+          var open = btn.getAttribute("aria-expanded") === "true";
+          btn.setAttribute("aria-expanded", String(!open));
+          btn.querySelector("span").textContent = open ? "Show cards" : "Hide cards";
+
+          if (open) {
+            // Collapse: fade out first, then remove from layout.
+            if (reduce) {
+              intro.style.display = "none";
+              return;
+            }
+            intro.classList.add("is-hidden");
+            intro.addEventListener("transitionend", function handler(e) {
+              if (e.propertyName !== "opacity") return;
+              intro.style.display = "none";
+              intro.removeEventListener("transitionend", handler);
+            });
+          } else {
+            // Expand: restore layout, then fade in.
+            intro.style.display = "";
+            void intro.offsetWidth; // force reflow so the transition runs
+            intro.classList.remove("is-hidden");
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
